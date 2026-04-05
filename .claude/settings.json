@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Bash(redis-server --version)",
+      "Bash(brew install:*)",
+      "Bash(chmod +x scripts/setup.sh)",
+      "Bash(./scripts/setup.sh)",
+      "Bash(command -v vercel)",
+      "Bash(vercel --version)",
+      "Bash(pnpm add:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vercel:*)",
+      "Read(//Users/rajdeepsingh/**)",
+      "Bash(python3 -c 'import json; print\\(json.load\\(open\\('\\\\''__TRACKED_VAR__/Library/Application Support/com.vercel.cli/auth.json'\\\\''\\)\\).get\\('\\\\''token'\\\\'','\\\\'''\\\\''\\)\\)')",
+      "Bash(curl -s -X PATCH https://api.vercel.com/v9/projects/prj_Gw5oKcrLp07NHrG4qkEgqv3GR2G3 -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({'name':d.get\\('name'\\),'root':d.get\\('rootDirectory'\\),'framework':d.get\\('framework'\\),'buildCommand':d.get\\('buildCommand'\\),'installCommand':d.get\\('installCommand'\\)}, indent=2\\)\\)\")",
+      "Bash(curl -s 'https://api.vercel.com/v9/projects?limit=5' -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v10/projects?teamId=__TRACKED_VAR__' -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{:*)",
+      "Bash(curl -s 'https://api.vercel.com/v9/projects/vgent-web?teamId=__TRACKED_VAR__' -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(curl -s -X PATCH 'https://api.vercel.com/v9/projects/__TRACKED_VAR__?teamId=__TRACKED_VAR__' -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"rootDirectory\": \"apps/web\"}')",
+      "Bash(curl -s -X PATCH 'https://api.vercel.com/v9/projects/__TRACKED_VAR__?teamId=__TRACKED_VAR__' -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"buildCommand\": null, \"installCommand\": \"cd ../.. && pnpm install\"}')",
+      "Bash(curl -s -X PATCH 'https://api.vercel.com/v9/projects/__TRACKED_VAR__?teamId=__TRACKED_VAR__' -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"buildCommand\": \"next build\"}')",
+      "Bash(npx next:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(redis-cli ping:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(/Users/rajdeepsingh/Desktop/Vgent/apps/api/.venv/bin/python --version)",
+      "Bash(curl -s http://localhost:8000/api/health)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -X POST http://localhost:8000/api/auth/signup -H 'Content-Type: application/json' -H 'Origin: http://localhost:3000' -d '{\"email\":\"test-run@example.com\",\"password\":\"testpass123\",\"full_name\":\"Test User\",\"organization_name\":\"Test Org\"}')",
+      "Bash(curl -s -o /dev/null -w \"Web status: %{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -X POST http://localhost:8000/api/auth/signup -H 'Content-Type: application/json' -d '{\"email\":\"testuser123@example.com\",\"password\":\"TestPass123!\",\"full_name\":\"Test User\",\"organization_name\":\"Test Org\"}')"
+    ]
+  }
+}

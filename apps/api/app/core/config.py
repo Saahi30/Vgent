@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from functools import lru_cache
 
 
@@ -7,6 +8,17 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
+    # Accept NEXT_PUBLIC_ prefixed variants (used by frontend .env.local)
+    next_public_supabase_url: str = ""
+    next_public_supabase_anon_key: str = ""
+
+    @model_validator(mode="after")
+    def _fill_supabase_from_next_public(self):
+        if not self.supabase_url and self.next_public_supabase_url:
+            self.supabase_url = self.next_public_supabase_url
+        if not self.supabase_anon_key and self.next_public_supabase_anon_key:
+            self.supabase_anon_key = self.next_public_supabase_anon_key
+        return self
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
     # Redis
@@ -80,6 +92,7 @@ class Settings(BaseSettings):
         env_file = "../../.env.local"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"
 
 
 @lru_cache()

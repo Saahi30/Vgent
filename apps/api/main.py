@@ -21,9 +21,15 @@ app = FastAPI(
 )
 
 # CORS
-cors_origins = [settings.app_url]
+cors_origins = [
+    settings.app_url,
+    "https://vgent-web-tau.vercel.app",
+    "http://localhost:3000",
+]
 if settings.cors_origins:
     cors_origins.extend([o.strip() for o in settings.cors_origins.split(",") if o.strip()])
+# Deduplicate while preserving order
+cors_origins = list(dict.fromkeys(cors_origins))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

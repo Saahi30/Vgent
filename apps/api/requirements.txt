@@ -1,0 +1,80 @@
+# FastAPI & Server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+websockets>=12.0
+
+# Database
+sqlalchemy[asyncio]>=2.0.35
+asyncpg>=0.29.0
+alembic>=1.13.0
+pgvector>=0.3.0
+
+# Auth & Security
+python-jose[cryptography]>=3.3.0
+cryptography>=43.0.0
+passlib[bcrypt]>=1.7.4
+
+# Redis & Celery
+redis>=5.1.0
+celery[redis]>=5.4.0
+flower>=2.0.0
+
+# HTTP Client
+httpx>=0.27.0
+
+# Validation
+pydantic>=2.8.2,<2.9.0
+pydantic-settings>=2.4.0
+email-validator>=2.0.0
+
+# Storage (S3/R2)
+boto3>=1.35.0
+
+# Rate Limiting
+slowapi>=0.1.9
+
+# Audio Processing
+pydub>=0.25.1
+webrtcvad>=2.0.10
+
+# TTS (free, no API key)
+edge-tts>=6.1.0
+gtts>=2.5.0
+
+# Document Processing (for RAG)
+pypdf>=4.0.0
+python-docx>=1.1.0
+markdownify>=0.13.0
+
+# LLM SDKs
+openai>=1.47.0
+anthropic>=0.34.0
+google-generativeai>=0.8.0
+groq>=0.11.0
+mistralai>=1.0.0,<2.0.0
+together>=1.2.0
+cohere>=5.9.0
+
+# STT SDKs
+deepgram-sdk>=3.6.0
+assemblyai>=0.33.0
+
+# TTS SDKs
+elevenlabs>=1.9.0
+cartesia>=1.1.0
+
+# Telephony
+twilio>=9.0.0
+plivo>=4.59.0
+
+# LiveKit (real-time audio rooms + SIP)
+livekit>=0.13.0
+livekit-api>=0.7.0
+livekit-agents>=0.12.0
+
+# Utilities
+python-dotenv>=1.0.0
+orjson>=3.10.0
+tenacity>=9.0.0
+pytz>=2024.1

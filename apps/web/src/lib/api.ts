@@ -9,13 +9,10 @@ type ApiResponse<T> = { data: T | null; error: { code: string; message: string }
 type PaginatedResponse<T> = { data: T[]; total: number; page: number; page_size: number; total_pages: number; error: null };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-
   const res = await fetch(`${API_URL}/api${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -28,15 +25,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json();
 }
 
-// Auth
 export const api = {
-  auth: {
-    signup: (data: { email: string; password: string; full_name: string; organization_name: string }) =>
-      request<ApiResponse<any>>("/auth/signup", { method: "POST", body: JSON.stringify(data) }),
-    login: (data: { email: string; password: string }) =>
-      request<ApiResponse<any>>("/auth/login", { method: "POST", body: JSON.stringify(data) }),
-    me: () => request<ApiResponse<any>>("/auth/me"),
-  },
 
   // Tenants
   tenants: {
@@ -87,10 +76,8 @@ export const api = {
     importPreview: (file: File) => {
       const form = new FormData();
       form.append("file", file);
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       return fetch(`${API_URL}/api/contacts/import/preview`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
       }).then(r => r.json()) as Promise<ApiResponse<{ headers: string[]; preview: Record<string, string>[]; total_rows: number }>>;
     },
@@ -102,10 +89,8 @@ export const api = {
       if (mapping.first_name_col) qs.set("first_name_col", mapping.first_name_col);
       if (mapping.last_name_col) qs.set("last_name_col", mapping.last_name_col);
       if (mapping.email_col) qs.set("email_col", mapping.email_col);
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       return fetch(`${API_URL}/api/contacts/import?${qs}`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
       }).then(r => r.json()) as Promise<ApiResponse<{ imported: number; skipped: number; duplicates: number }>>;
     },
@@ -176,10 +161,8 @@ export const api = {
     uploadDocument: (kbId: string, file: File) => {
       const form = new FormData();
       form.append("file", file);
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       return fetch(`${API_URL}/api/knowledge-bases/${kbId}/documents`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
       }).then(r => r.json()) as Promise<ApiResponse<any>>;
     },

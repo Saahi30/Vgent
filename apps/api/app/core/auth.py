@@ -7,9 +7,12 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.user import User
 from dataclasses import dataclass
+from typing import Optional
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 settings = get_settings()
+
+DEFAULT_USER_ID = "default"
 
 
 @dataclass
@@ -21,12 +24,7 @@ class CurrentUser:
 
 
 async def verify_jwt(token: str) -> dict:
-    """Verify a Supabase JWT token and return claims.
-
-    Supabase issues JWTs signed with the JWT secret (HS256).
-    Even though the project uses ECC P-256 keys, the JWT tokens
-    issued to clients via supabase-js are HMAC-signed with the JWT secret.
-    """
+    """Verify a Supabase JWT token and return claims."""
     jwt_secret = settings.supabase_jwt_secret
     if not jwt_secret:
         raise HTTPException(
@@ -50,10 +48,23 @@ async def verify_jwt(token: str) -> dict:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> CurrentUser:
-    """Extract and validate current user from JWT."""
+    """Extract and validate current user from JWT, or return default user if no token."""
+    if not credentials:
+        # No auth token — return first available user or a default
+        result = await db.execute(select(User).where(User.is_active == True).limit(1))
+        user = result.scalar_one_or_none()
+        if user:
+            return CurrentUser(
+                id=str(user.id),
+                tenant_id=str(user.tenant_id) if user.tenant_id else None,
+                role=user.role,
+                email=None,
+            )
+        return CurrentUser(id=DEFAULT_USER_ID, tenant_id=None, role="owner", email=None)
+
     payload = await verify_jwt(credentials.credentials)
 
     user_id = payload.get("sub")
@@ -63,7 +74,6 @@ async def get_current_user(
             detail="Invalid token: missing user ID",
         )
 
-    # Fetch user from DB to get tenant_id and role
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 

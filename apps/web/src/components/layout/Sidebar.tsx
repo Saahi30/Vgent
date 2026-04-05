@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui";
-import { useAuthStore } from "@/store/auth";
 import {
   Bot, Phone, Users, Megaphone, BookOpen, Settings,
   Activity, LayoutDashboard, Shield, ChevronLeft,
@@ -28,7 +27,6 @@ const adminItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUIStore();
-  const user = useAuthStore((s) => s.user);
 
   return (
     <aside
@@ -72,29 +70,25 @@ export function Sidebar() {
         })}
 
         {/* Admin section */}
-        {user?.role === "superadmin" && (
-          <>
-            <div className="my-2 border-t border-border" />
-            {adminItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 shrink-0" />
-                  {sidebarOpen && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </>
-        )}
+        <div className="my-2 border-t border-border" />
+        {adminItems.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              {sidebarOpen && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );

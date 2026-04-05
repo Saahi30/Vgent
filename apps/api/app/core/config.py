@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     # App
     api_url: str = "http://localhost:8000"
     app_url: str = "http://localhost:3000"
+    cors_origins: str = ""  # Comma-separated extra origins (e.g. "https://vgent-web-tau.vercel.app,https://custom.domain")
     api_secret_key: str = "dev-secret-change-me"
     fernet_encryption_key: str = ""
     supabase_jwt_secret: str = ""

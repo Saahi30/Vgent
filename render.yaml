@@ -8,6 +8,22 @@ services:
     dockerContext: apps/api
     plan: free
     envVars:
+      - fromGroup: vgent-envs
+
+  # Celery worker (for background tasks)
+  - type: worker
+    name: vgent-worker
+    runtime: docker
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: apps/api
+    plan: free
+    dockerCommand: celery -A celery_app worker --loglevel=info
+    envVars:
+      - fromGroup: vgent-envs
+
+envVarGroups:
+  - name: vgent-envs
+    envVars:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
@@ -44,15 +60,3 @@ services:
         sync: false
       - key: CARTESIA_API_KEY
         sync: false
-
-  # Celery worker (for background tasks)
-  - type: worker
-    name: vgent-worker
-    runtime: docker
-    dockerfilePath: apps/api/Dockerfile
-    dockerContext: apps/api
-    plan: free
-    dockerCommand: celery -A celery_app worker --loglevel=info
-    envVars:
-      - fromService: vgent-api
-        type: envs

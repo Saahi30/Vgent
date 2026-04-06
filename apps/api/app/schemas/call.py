@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 from datetime import datetime
+
+from app.schemas.contact import normalize_phone_number
 
 
 class CallInitiate(BaseModel):
@@ -9,6 +11,11 @@ class CallInitiate(BaseModel):
     contact_id: UUID | None = None
     campaign_id: UUID | None = None
     metadata: dict = Field(default_factory=dict)
+
+    @field_validator("to_number")
+    @classmethod
+    def normalize_phone(cls, v: str) -> str:
+        return normalize_phone_number(v)
 
 
 class CallResponse(BaseModel):
@@ -35,11 +42,11 @@ class CallResponse(BaseModel):
     cost_usd: float
     end_reason: str | None
     error_message: str | None
-    metadata: dict
+    metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
 class CallTurnResponse(BaseModel):

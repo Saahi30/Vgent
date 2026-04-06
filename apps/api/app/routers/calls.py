@@ -155,7 +155,7 @@ async def initiate_call(
 
     # Determine telephony provider and initiate
     from app.services.telephony.registry import get_telephony_provider
-    provider_name = agent.telephony_provider.provider_name if agent.telephony_provider else "webrtc"
+    provider_name = agent.telephony_provider.provider_name if agent.telephony_provider else "vobiz"
 
     try:
         provider = get_telephony_provider(provider_name)
@@ -187,6 +187,42 @@ async def initiate_call(
     # The LiveKit agent worker will detect the new room and join automatically
 
     return ApiResponse(data=CallResponse.model_validate(call))
+
+
+@router.post("/{call_id}/hangup", response_model=ApiResponse)
+async def hangup_call(
+    call_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Hang up an active call."""
+    from app.services.telephony.registry import get_telephony_provider
+
+    result = await db.execute(
+        select(Call).where(Call.id == call_id, Call.tenant_id == user.tenant_id)
+    )
+    call = result.scalar_one_or_none()
+    if not call:
+        raise HTTPException(status_code=404, detail="Call not found")
+
+    if call.status not in ("initiated", "ringing", "in_progress"):
+        raise HTTPException(status_code=400, detail=f"Call is already {call.status}")
+
+    try:
+        provider = get_telephony_provider(call.telephony_provider or "vobiz")
+        hung_up = await provider.hangup_call(call.telephony_call_id or str(call_id))
+
+        from datetime import datetime, timezone
+        call.status = "completed"
+        call.ended_at = datetime.now(timezone.utc)
+        call.end_reason = "hangup"
+        if call.started_at:
+            call.duration_seconds = int((call.ended_at - call.started_at).total_seconds())
+        await db.flush()
+
+        return ApiResponse(data={"hung_up": hung_up, "call_id": str(call_id)})
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to hang up: {str(e)}")
 
 
 @router.post("/test-call", response_model=ApiResponse)

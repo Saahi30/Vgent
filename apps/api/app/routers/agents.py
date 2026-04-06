@@ -109,6 +109,64 @@ async def update_agent(
     return ApiResponse(data=AgentResponse.model_validate(agent))
 
 
+@router.post("/{agent_id}/duplicate", response_model=ApiResponse[AgentResponse], status_code=201)
+async def duplicate_agent(
+    agent_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Duplicate an agent with all its configuration. The copy is named '{original} (Copy)'."""
+    result = await db.execute(
+        select(Agent).where(Agent.id == agent_id, Agent.tenant_id == user.tenant_id)
+    )
+    agent = result.scalar_one_or_none()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    # Check agent limit
+    count = (await db.execute(
+        select(func.count()).select_from(Agent).where(Agent.tenant_id == user.tenant_id)
+    )).scalar() or 0
+    tenant = (await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))).scalar_one()
+    if count >= tenant.max_agents:
+        raise HTTPException(status_code=403, detail=f"Agent limit reached ({tenant.max_agents})")
+
+    # Copy all fields except id, created_at, updated_at
+    clone = Agent(
+        tenant_id=user.tenant_id,
+        name=f"{agent.name} (Copy)",
+        description=agent.description,
+        is_active=True,
+        telephony_provider_id=agent.telephony_provider_id,
+        llm_provider_id=agent.llm_provider_id,
+        stt_provider_id=agent.stt_provider_id,
+        tts_provider_id=agent.tts_provider_id,
+        system_prompt=agent.system_prompt,
+        llm_model=agent.llm_model,
+        llm_temperature=agent.llm_temperature,
+        llm_max_tokens=agent.llm_max_tokens,
+        llm_extra_params=agent.llm_extra_params or {},
+        voice_id=agent.voice_id,
+        voice_speed=agent.voice_speed,
+        voice_stability=agent.voice_stability,
+        first_message=agent.first_message,
+        end_call_phrases=agent.end_call_phrases,
+        max_call_duration_seconds=agent.max_call_duration_seconds,
+        silence_timeout_seconds=agent.silence_timeout_seconds,
+        interrupt_on_user_speech=agent.interrupt_on_user_speech,
+        language=agent.language,
+        knowledge_base_enabled=agent.knowledge_base_enabled,
+        knowledge_base_id=agent.knowledge_base_id,
+        webhook_url=agent.webhook_url,
+        webhook_events=agent.webhook_events,
+        metadata_=agent.metadata_ or {},
+    )
+    db.add(clone)
+    await db.flush()
+
+    return ApiResponse(data=AgentResponse.model_validate(clone))
+
+
 @router.delete("/{agent_id}", response_model=ApiResponse)
 async def delete_agent(
     agent_id: UUID,

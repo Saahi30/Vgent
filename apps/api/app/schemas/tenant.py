@@ -28,8 +28,8 @@ class TenantResponse(BaseModel):
     max_agents: int
     max_concurrent_calls: int
     monthly_call_minutes_limit: int
-    metadata: dict = {}
+    metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}

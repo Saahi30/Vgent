@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 from datetime import datetime
 
@@ -113,9 +113,9 @@ class AgentResponse(BaseModel):
 
     webhook_url: str | None
     webhook_events: list[str] | None
-    metadata: dict
+    metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
 
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}

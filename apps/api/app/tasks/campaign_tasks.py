@@ -240,7 +240,7 @@ async def _dial(campaign_id: str, campaign_contact_id: str, contact_id: str,
         cc.call_id = call.id
 
         # Initiate via telephony provider
-        provider_name = agent.telephony_provider.provider_name if agent.telephony_provider else "webrtc"
+        provider_name = agent.telephony_provider.provider_name if agent.telephony_provider else "vobiz"
 
         try:
             provider = get_telephony_provider(provider_name)

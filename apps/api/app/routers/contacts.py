@@ -9,7 +9,7 @@ import io
 from app.core.database import get_db
 from app.core.auth import get_current_user, CurrentUser
 from app.models.contact import Contact
-from app.schemas.contact import ContactCreate, ContactUpdate, ContactResponse
+from app.schemas.contact import ContactCreate, ContactUpdate, ContactResponse, normalize_phone_number
 from app.schemas.common import ApiResponse, PaginatedResponse
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/contacts", tags=["contacts"])
 @router.get("", response_model=PaginatedResponse[ContactResponse])
 async def list_contacts(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     search: str | None = None,
     do_not_call: bool | None = None,
     user: CurrentUser = Depends(get_current_user),
@@ -122,6 +122,32 @@ async def delete_contact(
     return ApiResponse(data={"deleted": True})
 
 
+@router.post("/bulk-delete", response_model=ApiResponse)
+async def bulk_delete_contacts(
+    contact_ids: list[UUID],
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete multiple contacts at once. Returns count of deleted contacts."""
+    if not contact_ids:
+        raise HTTPException(status_code=400, detail="No contact IDs provided")
+    if len(contact_ids) > 500:
+        raise HTTPException(status_code=400, detail="Maximum 500 contacts per batch")
+
+    deleted = 0
+    for contact_id in contact_ids:
+        result = await db.execute(
+            select(Contact).where(Contact.id == contact_id, Contact.tenant_id == user.tenant_id)
+        )
+        contact = result.scalar_one_or_none()
+        if contact:
+            await db.delete(contact)
+            deleted += 1
+
+    await db.flush()
+    return ApiResponse(data={"deleted": deleted, "requested": len(contact_ids)})
+
+
 @router.post("/import/preview", response_model=ApiResponse)
 async def preview_csv(
     file: UploadFile = File(...),
@@ -187,6 +213,7 @@ async def import_contacts_csv(
         if not phone:
             skipped += 1
             continue
+        phone = normalize_phone_number(phone)
 
         # Check for duplicate phone within this tenant
         existing = (await db.execute(

@@ -52,11 +52,11 @@ class CampaignResponse(BaseModel):
     total_contacts: int
     completed_calls: int
     failed_calls: int
-    metadata: dict
+    metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
 class CampaignContactResponse(BaseModel):

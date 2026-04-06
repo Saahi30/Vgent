@@ -53,9 +53,16 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in cors_origins:
+        headers["access-control-allow-origin"] = origin
+        headers["access-control-allow-credentials"] = "true"
+        headers["vary"] = "Origin"
     return JSONResponse(
         status_code=500,
         content={"data": None, "error": {"code": "internal_error", "message": str(exc)}},
+        headers=headers,
     )
 
 

@@ -179,6 +179,96 @@ async def pause_campaign(
     return ApiResponse(data=CampaignResponse.model_validate(campaign))
 
 
+@router.post("/{campaign_id}/contacts", response_model=ApiResponse, status_code=201)
+async def add_contacts_to_campaign(
+    campaign_id: UUID,
+    contact_ids: list[UUID],
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add contacts to an existing campaign. Skips duplicates and DNC contacts."""
+    result = await db.execute(
+        select(Campaign).where(Campaign.id == campaign_id, Campaign.tenant_id == user.tenant_id)
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status == "completed":
+        raise HTTPException(status_code=400, detail="Cannot add contacts to a completed campaign")
+
+    # Get existing contact IDs in this campaign
+    existing = (await db.execute(
+        select(CampaignContact.contact_id).where(CampaignContact.campaign_id == campaign_id)
+    )).scalars().all()
+    existing_set = set(existing)
+
+    added = 0
+    skipped = 0
+    for contact_id in contact_ids:
+        if contact_id in existing_set:
+            skipped += 1
+            continue
+
+        contact = (await db.execute(
+            select(Contact).where(Contact.id == contact_id, Contact.tenant_id == user.tenant_id)
+        )).scalar_one_or_none()
+        if not contact:
+            skipped += 1
+            continue
+
+        cc = CampaignContact(
+            campaign_id=campaign.id,
+            contact_id=contact_id,
+            tenant_id=user.tenant_id,
+            status="do_not_call" if contact.do_not_call else "pending",
+        )
+        db.add(cc)
+        added += 1
+        existing_set.add(contact_id)
+
+    campaign.total_contacts = (campaign.total_contacts or 0) + added
+    await db.flush()
+
+    return ApiResponse(data={"added": added, "skipped": skipped})
+
+
+@router.get("/{campaign_id}/stats", response_model=ApiResponse)
+async def get_campaign_stats(
+    campaign_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get detailed campaign statistics with contact status breakdown."""
+    result = await db.execute(
+        select(Campaign).where(Campaign.id == campaign_id, Campaign.tenant_id == user.tenant_id)
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    # Contact status breakdown
+    status_result = await db.execute(
+        select(CampaignContact.status, func.count()).where(
+            CampaignContact.campaign_id == campaign_id
+        ).group_by(CampaignContact.status)
+    )
+    status_breakdown = {row[0]: row[1] for row in status_result.all()}
+
+    total = sum(status_breakdown.values())
+    completed = status_breakdown.get("completed", 0)
+
+    return ApiResponse(data={
+        "campaign_id": str(campaign.id),
+        "status": campaign.status,
+        "total_contacts": total,
+        "contact_status_breakdown": status_breakdown,
+        "completed_calls": campaign.completed_calls or 0,
+        "failed_calls": campaign.failed_calls or 0,
+        "success_rate": round(completed / total * 100, 1) if total > 0 else 0,
+    })
+
+
 @router.get("/{campaign_id}/contacts", response_model=PaginatedResponse[CampaignContactResponse])
 async def list_campaign_contacts(
     campaign_id: UUID,

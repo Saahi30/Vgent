@@ -8,6 +8,7 @@ from app.core.auth import get_current_user, CurrentUser
 from app.models.tenant import Tenant
 from app.models.agent import Agent
 from app.models.call import Call
+from app.models.usage import UsageRecord
 from app.schemas.tenant import TenantResponse, TenantUpdate
 from app.schemas.common import ApiResponse
 
@@ -99,6 +100,16 @@ async def get_current_tenant_usage(
     seconds_used = minutes_result.scalar() or 0
     minutes_used = round(seconds_used / 60, 1)
 
+    # Total cost this month from usage records
+    cost_result = await db.execute(
+        select(UsageRecord)
+        .where(UsageRecord.tenant_id == user.tenant_id)
+        .where(UsageRecord.period_start >= month_start.date())
+    )
+    usage_record = cost_result.scalar_one_or_none()
+    total_cost_usd = round(usage_record.total_cost_usd, 4) if usage_record else 0.0
+    cost_per_minute = round(total_cost_usd / minutes_used, 4) if minutes_used > 0 else 0.0
+
     return ApiResponse(data={
         "plan": tenant.plan,
         "agents_count": agents_count,
@@ -107,4 +118,6 @@ async def get_current_tenant_usage(
         "minutes_used": minutes_used,
         "monthly_call_minutes_limit": tenant.monthly_call_minutes_limit,
         "max_concurrent_calls": tenant.max_concurrent_calls,
+        "total_cost_usd": total_cost_usd,
+        "cost_per_minute": cost_per_minute,
     })

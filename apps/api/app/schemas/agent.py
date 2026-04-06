@@ -25,6 +25,15 @@ class AgentCreate(BaseModel):
     voice_speed: float = Field(default=1.0, ge=0.25, le=4.0)
     voice_stability: float = Field(default=0.75, ge=0, le=1)
 
+    # Engine config
+    response_latency_mode: str = Field(default="normal", pattern="^(fast|normal|relaxed)$")
+    endpointing_ms: int = Field(default=700, ge=100, le=5000)
+    linear_delay_ms: int = Field(default=1200, ge=0, le=5000)
+    interruption_words_count: int = Field(default=1, ge=1, le=10)
+    user_online_detection: bool = True
+    user_online_message: str | None = None
+    user_online_timeout_seconds: int = Field(default=9, ge=1, le=60)
+
     # Call behaviour
     first_message: str | None = None
     end_call_phrases: list[str] = Field(default_factory=list)
@@ -32,6 +41,11 @@ class AgentCreate(BaseModel):
     silence_timeout_seconds: int = Field(default=10, ge=3, le=60)
     interrupt_on_user_speech: bool = True
     language: str = Field(default="en-US", max_length=10)
+    noise_cancellation: bool = False
+    voicemail_detection: bool = False
+    keypad_input_enabled: bool = False
+    final_call_message: str | None = None
+    ambient_noise: str = Field(default="none", max_length=50)
 
     # Knowledge base
     knowledge_base_enabled: bool = False
@@ -64,12 +78,25 @@ class AgentUpdate(BaseModel):
     voice_speed: float | None = Field(None, ge=0.25, le=4.0)
     voice_stability: float | None = Field(None, ge=0, le=1)
 
+    response_latency_mode: str | None = Field(None, pattern="^(fast|normal|relaxed)$")
+    endpointing_ms: int | None = Field(None, ge=100, le=5000)
+    linear_delay_ms: int | None = Field(None, ge=0, le=5000)
+    interruption_words_count: int | None = Field(None, ge=1, le=10)
+    user_online_detection: bool | None = None
+    user_online_message: str | None = None
+    user_online_timeout_seconds: int | None = Field(None, ge=1, le=60)
+
     first_message: str | None = None
     end_call_phrases: list[str] | None = None
     max_call_duration_seconds: int | None = Field(None, ge=30, le=3600)
     silence_timeout_seconds: int | None = Field(None, ge=3, le=60)
     interrupt_on_user_speech: bool | None = None
     language: str | None = None
+    noise_cancellation: bool | None = None
+    voicemail_detection: bool | None = None
+    keypad_input_enabled: bool | None = None
+    final_call_message: str | None = None
+    ambient_noise: str | None = Field(None, max_length=50)
 
     knowledge_base_enabled: bool | None = None
     knowledge_base_id: UUID | None = None
@@ -101,12 +128,25 @@ class AgentResponse(BaseModel):
     voice_speed: float
     voice_stability: float
 
+    response_latency_mode: str
+    endpointing_ms: int
+    linear_delay_ms: int
+    interruption_words_count: int
+    user_online_detection: bool
+    user_online_message: str | None
+    user_online_timeout_seconds: int
+
     first_message: str | None
     end_call_phrases: list[str] | None
     max_call_duration_seconds: int
     silence_timeout_seconds: int
     interrupt_on_user_speech: bool
     language: str
+    noise_cancellation: bool
+    voicemail_detection: bool
+    keypad_input_enabled: bool
+    final_call_message: str | None
+    ambient_noise: str
 
     knowledge_base_enabled: bool
     knowledge_base_id: UUID | None

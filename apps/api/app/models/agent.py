@@ -33,6 +33,15 @@ class Agent(Base):
     voice_speed: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     voice_stability: Mapped[float] = mapped_column(Float, nullable=False, default=0.75)
 
+    # Engine config
+    response_latency_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="normal")  # fast, normal, relaxed
+    endpointing_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=700)
+    linear_delay_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=1200)
+    interruption_words_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    user_online_detection: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    user_online_message: Mapped[str | None] = mapped_column(Text)
+    user_online_timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=9)
+
     # Call behaviour
     first_message: Mapped[str | None] = mapped_column(Text)
     end_call_phrases: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
@@ -40,6 +49,11 @@ class Agent(Base):
     silence_timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     interrupt_on_user_speech: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="en-US")
+    noise_cancellation: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    voicemail_detection: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    keypad_input_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    final_call_message: Mapped[str | None] = mapped_column(Text)
+    ambient_noise: Mapped[str] = mapped_column(String(50), nullable=False, default="none")
 
     # Knowledge base
     knowledge_base_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

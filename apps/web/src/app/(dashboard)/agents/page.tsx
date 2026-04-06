@@ -50,12 +50,12 @@ export default function AgentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {agents.map((agent: any) => (
             <Link key={agent.id} href={`/agents/${agent.id}`}>
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-primary" />
+                      <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
                         <p className="font-semibold">{agent.name}</p>

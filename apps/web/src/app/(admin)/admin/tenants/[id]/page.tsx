@@ -288,7 +288,7 @@ export default function AdminTenantDetailPage() {
                   {calls.slice(0, 10).map((call: any) => (
                     <tr
                       key={call.id}
-                      className="border-b border-border hover:bg-accent/50 transition-colors"
+                      className="border-b border-border hover:bg-accent transition-colors"
                     >
                       <td className="p-3 font-medium">{call.to_number}</td>
                       <td className="p-3">

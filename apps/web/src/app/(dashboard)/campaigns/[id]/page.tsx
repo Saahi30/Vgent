@@ -159,7 +159,7 @@ export default function CampaignDetailPage() {
 
   const contactStatusIcon = (s: string) => {
     switch (s) {
-      case "completed": return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "completed": return <CheckCircle className="h-4 w-4 text-success" />;
       case "failed": return <XCircle className="h-4 w-4 text-destructive" />;
       case "calling": return <Phone className="h-4 w-4 text-primary animate-pulse" />;
       case "do_not_call": return <XCircle className="h-4 w-4 text-muted-foreground" />;
@@ -219,7 +219,7 @@ export default function CampaignDetailPage() {
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <CheckCircle className="h-4 w-4" /> Completed
             </div>
-            <p className="text-2xl font-bold mt-1 text-green-500">{campaign.completed_calls}</p>
+            <p className="text-2xl font-bold mt-1 text-success">{campaign.completed_calls}</p>
           </CardContent>
         </Card>
         <Card>
@@ -322,7 +322,7 @@ export default function CampaignDetailPage() {
                     </tr>
                   ) : (
                     contacts.map((cc: any) => (
-                      <tr key={cc.id} className="border-b border-border hover:bg-accent/50">
+                      <tr key={cc.id} className="border-b border-border hover:bg-accent">
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             {contactStatusIcon(cc.status)}
@@ -365,7 +365,7 @@ export default function CampaignDetailPage() {
                     </tr>
                   ) : (
                     calls.map((call: any) => (
-                      <tr key={call.id} className="border-b border-border hover:bg-accent/50">
+                      <tr key={call.id} className="border-b border-border hover:bg-accent">
                         <td className="p-4 font-medium">
                           <Link href={`/calls/${call.id}`} className="hover:underline">
                             {call.to_number}
@@ -398,7 +398,7 @@ export default function CampaignDetailPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
                 <p className="text-sm font-medium">Live Campaign Events</p>
               </div>
               <div className="space-y-2 max-h-96 overflow-y-auto">

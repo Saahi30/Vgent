@@ -44,9 +44,9 @@ function formatDuration(startedAt?: string): string {
 function statusBadge(status: string) {
   switch (status) {
     case "ringing":
-      return <Badge variant="outline" className="border-yellow-500 text-yellow-500">Ringing</Badge>;
+      return <Badge variant="outline" className="border-warning text-warning">Ringing</Badge>;
     case "in_progress":
-      return <Badge variant="outline" className="border-green-500 text-green-500">Live</Badge>;
+      return <Badge variant="outline" className="border-success text-success">Live</Badge>;
     case "completed":
       return <Badge variant="secondary">Ended</Badge>;
     default:
@@ -158,7 +158,7 @@ export default function LiveMonitorPage() {
         <div className="flex items-center gap-2">
           <div
             className={`h-2 w-2 rounded-full ${
-              connected ? "bg-green-500 animate-pulse" : "bg-red-500"
+              connected ? "bg-success animate-pulse" : "bg-destructive"
             }`}
           />
           <span className="text-xs text-muted-foreground">
@@ -171,8 +171,8 @@ export default function LiveMonitorPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Phone className="h-5 w-5 text-primary" />
+            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Phone className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{calls.length}</p>
@@ -182,8 +182,8 @@ export default function LiveMonitorPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-green-500" />
+            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Activity className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{callsToday}</p>
@@ -193,8 +193,8 @@ export default function LiveMonitorPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Radio className="h-5 w-5 text-blue-500" />
+            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Radio className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">
@@ -228,7 +228,7 @@ export default function LiveMonitorPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {calls.map((call) => (
-                <Card key={call.call_id} className="border-l-4 border-l-green-500">
+                <Card key={call.call_id} className="border-l-4 border-l-success">
                   <CardContent className="p-4 space-y-3">
                     {/* Header */}
                     <div className="flex items-center justify-between">
@@ -236,8 +236,8 @@ export default function LiveMonitorPage() {
                         <div
                           className={`h-3 w-3 rounded-full ${
                             call.status === "in_progress"
-                              ? "bg-green-500 animate-pulse"
-                              : "bg-yellow-500 animate-pulse"
+                              ? "bg-success animate-pulse"
+                              : "bg-warning animate-pulse"
                           }`}
                         />
                         <div>

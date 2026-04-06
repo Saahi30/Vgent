@@ -91,7 +91,7 @@ export default function CallsPage() {
                     <tr
                       key={call.id}
                       onClick={() => router.push(`/calls/${call.id}`)}
-                      className="border-b border-border hover:bg-accent/50 cursor-pointer transition-colors"
+                      className="border-b border-border hover:bg-accent cursor-pointer transition-colors"
                     >
                       <td className="p-4 font-medium">{call.to_number}</td>
                       <td className="p-4">

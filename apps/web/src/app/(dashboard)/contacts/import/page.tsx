@@ -122,7 +122,7 @@ export default function ImportContactsPage() {
           <CardContent className="p-8">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center cursor-pointer hover:border-primary/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center cursor-pointer hover:border-foreground/20 transition-colors"
             >
               {uploading ? (
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -277,13 +277,13 @@ export default function ImportContactsPage() {
       {step === "result" && result && (
         <Card>
           <CardContent className="p-8 text-center space-y-4">
-            <div className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-              <Check className="h-8 w-8 text-green-500" />
+            <div className="h-16 w-16 rounded-full bg-success/20 flex items-center justify-center mx-auto">
+              <Check className="h-8 w-8 text-success" />
             </div>
             <h2 className="text-xl font-bold">Import Complete</h2>
             <div className="flex justify-center gap-8 text-sm">
               <div>
-                <p className="text-2xl font-bold text-green-500">{result.imported}</p>
+                <p className="text-2xl font-bold text-success">{result.imported}</p>
                 <p className="text-muted-foreground">Imported</p>
               </div>
               <div>
@@ -291,7 +291,7 @@ export default function ImportContactsPage() {
                 <p className="text-muted-foreground">Skipped</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-yellow-500">{result.duplicates}</p>
+                <p className="text-2xl font-bold text-warning">{result.duplicates}</p>
                 <p className="text-muted-foreground">Duplicates</p>
               </div>
             </div>

@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
       <div className={cn("transition-all duration-300", sidebarOpen ? "ml-64" : "ml-16")}>
         <Topbar />
-        <main className="p-6">{children}</main>
+        <main className="px-8 py-6">{children}</main>
       </div>
     </div>
   );

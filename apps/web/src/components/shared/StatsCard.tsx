@@ -28,8 +28,8 @@ export function StatsCard({ title, value, subtitle, icon: Icon, trend, className
               </p>
             )}
           </div>
-          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="h-6 w-6 text-primary" />
+          <div className="h-12 w-12 rounded-lg bg-secondary flex items-center justify-center">
+            <Icon className="h-6 w-6 text-muted-foreground" />
           </div>
         </div>
       </CardContent>

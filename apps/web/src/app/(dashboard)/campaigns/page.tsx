@@ -100,7 +100,7 @@ export default function CampaignsPage() {
                 </thead>
                 <tbody>
                   {campaigns.map((campaign: any) => (
-                    <tr key={campaign.id} className="border-b border-border hover:bg-accent/50 transition-colors">
+                    <tr key={campaign.id} className="border-b border-border hover:bg-accent transition-colors">
                       <td className="p-4">
                         <Link href={`/campaigns/${campaign.id}`} className="font-medium hover:underline">
                           {campaign.name}

@@ -31,14 +31,14 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-background transition-all duration-300",
         sidebarOpen ? "w-64" : "w-16"
       )}
     >
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-border">
         {sidebarOpen && (
-          <Link href="/" className="text-xl font-bold text-primary">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-foreground">
             Vgent
           </Link>
         )}
@@ -59,7 +59,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-secondary text-foreground font-medium"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >
@@ -80,7 +80,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-secondary text-foreground font-medium"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >

@@ -143,7 +143,7 @@ export default function KnowledgeBaseDetailPage() {
 
   const statusIcon = (status: string) => {
     switch (status) {
-      case "ready": return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "ready": return <CheckCircle className="h-4 w-4 text-success" />;
       case "failed": return <XCircle className="h-4 w-4 text-destructive" />;
       case "processing": return <Loader2 className="h-4 w-4 text-primary animate-spin" />;
       default: return <Clock className="h-4 w-4 text-muted-foreground" />;
@@ -184,7 +184,7 @@ export default function KnowledgeBaseDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
               <h1 className="text-2xl font-bold">{kb.name}</h1>
             </div>
             {kb.description && (
@@ -285,7 +285,7 @@ export default function KnowledgeBaseDetailPage() {
                     </thead>
                     <tbody>
                       {documents.map((doc: any) => (
-                        <tr key={doc.id} className="border-b border-border hover:bg-accent/50">
+                        <tr key={doc.id} className="border-b border-border hover:bg-accent">
                           <td className="p-4">
                             <p className="font-medium truncate max-w-xs" title={doc.file_name}>
                               {doc.file_name || "Untitled"}

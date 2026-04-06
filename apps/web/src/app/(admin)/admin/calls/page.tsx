@@ -170,7 +170,7 @@ export default function AdminCallsPage() {
                     return (
                       <tr
                         key={call.id}
-                        className="border-b border-border hover:bg-accent/50 transition-colors"
+                        className="border-b border-border hover:bg-accent transition-colors"
                       >
                         <td className="p-4 font-medium">{call.to_number}</td>
                         <td className="p-4">

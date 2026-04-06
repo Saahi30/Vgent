@@ -232,7 +232,7 @@ export default function ContactsPage() {
                 </thead>
                 <tbody>
                   {contacts.map((contact: any) => (
-                    <tr key={contact.id} className="border-b border-border hover:bg-accent/50 transition-colors">
+                    <tr key={contact.id} className="border-b border-border hover:bg-accent transition-colors">
                       <td className="p-4 font-medium">
                         {contact.first_name} {contact.last_name}
                       </td>
@@ -265,7 +265,7 @@ export default function ContactsPage() {
                             title={contact.do_not_call ? "Remove from DNC" : "Add to DNC"}
                           >
                             {contact.do_not_call ? (
-                              <Phone className="h-3.5 w-3.5 text-green-500" />
+                              <Phone className="h-3.5 w-3.5 text-success" />
                             ) : (
                               <PhoneOff className="h-3.5 w-3.5 text-muted-foreground" />
                             )}

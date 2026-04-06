@@ -112,7 +112,7 @@ export default function CallDetailPage() {
                 const isUser = turn.role === "user";
                 return (
                   <div key={i} className={`flex ${isUser ? "justify-start" : "justify-end"}`}>
-                    <div className={`max-w-[75%] rounded-lg p-3 ${isUser ? "bg-slate-800" : "bg-primary/10"}`}>
+                    <div className={`max-w-[75%] rounded-lg p-3 ${isUser ? "bg-secondary" : "border border-border bg-background"}`}>
                       <div className="flex items-center gap-2 mb-1">
                         {isUser ? (
                           <User className="h-3 w-3 text-muted-foreground" />
@@ -145,7 +145,7 @@ export default function CallDetailPage() {
           <CardContent>
             <div className="space-y-2">
               {events.map((event: any, i: number) => (
-                <div key={i} className="flex items-start gap-3 p-2 rounded hover:bg-accent/50">
+                <div key={i} className="flex items-start gap-3 p-2 rounded hover:bg-accent">
                   <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

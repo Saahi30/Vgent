@@ -76,7 +76,7 @@ export default function CreateAgentPage() {
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
                 i === step ? "bg-primary text-primary-foreground" :
-                i < step ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                i < step ? "bg-secondary text-foreground" : "bg-muted text-muted-foreground"
               )}
             >
               {i < step ? <Check className="h-3 w-3" /> : <span>{i + 1}</span>}

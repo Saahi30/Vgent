@@ -91,11 +91,11 @@ export default function KnowledgeBasesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {kbs.map((kb: any) => (
             <Link key={kb.id} href={`/knowledge-bases/${kb.id}`}>
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
+                      <BookOpen className="h-5 w-5 text-muted-foreground" />
                       <h3 className="font-semibold">{kb.name}</h3>
                     </div>
                     <Button

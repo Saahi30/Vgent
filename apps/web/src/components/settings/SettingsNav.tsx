@@ -22,7 +22,7 @@ export function SettingsNav() {
           className={cn(
             "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
             pathname === tab.href
-              ? "border-primary text-primary"
+              ? "border-foreground text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >

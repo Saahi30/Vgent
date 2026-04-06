@@ -35,7 +35,7 @@ export const CALL_STATUSES = [
 
 export const CAMPAIGN_STATUSES = [
   { value: "draft", label: "Draft", color: "bg-muted" },
-  { value: "scheduled", label: "Scheduled", color: "bg-primary/20 text-primary" },
+  { value: "scheduled", label: "Scheduled", color: "bg-secondary text-foreground" },
   { value: "running", label: "Running", color: "bg-success/20 text-success" },
   { value: "paused", label: "Paused", color: "bg-warning/20 text-warning" },
   { value: "completed", label: "Completed", color: "bg-success/20 text-success" },

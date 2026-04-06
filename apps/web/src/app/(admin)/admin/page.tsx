@@ -99,8 +99,8 @@ export default function AdminOverviewPage() {
                   <div
                     className={`h-3 w-3 rounded-full ${
                       health.db === "ok" || health.database === "ok"
-                        ? "bg-green-500"
-                        : "bg-red-500"
+                        ? "bg-success"
+                        : "bg-destructive"
                     }`}
                   />
                   <span className="text-sm font-medium">
@@ -121,7 +121,7 @@ export default function AdminOverviewPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className={`h-3 w-3 rounded-full ${
-                      health.redis === "ok" ? "bg-green-500" : "bg-red-500"
+                      health.redis === "ok" ? "bg-success" : "bg-destructive"
                     }`}
                   />
                   <span className="text-sm font-medium">

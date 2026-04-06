@@ -165,9 +165,9 @@ export default function AgentTestPage() {
             <div
               className={`h-3 w-3 rounded-full ${
                 status === "connected"
-                  ? "bg-green-500 animate-pulse"
+                  ? "bg-success animate-pulse"
                   : status === "connecting"
-                  ? "bg-yellow-500 animate-pulse"
+                  ? "bg-warning animate-pulse"
                   : "bg-muted-foreground"
               }`}
             />
@@ -245,8 +245,8 @@ export default function AgentTestPage() {
                     t.role === "system"
                       ? "bg-muted text-muted-foreground text-center italic"
                       : t.role === "user"
-                      ? "bg-slate-800 mr-12"
-                      : "bg-primary/10 ml-12"
+                      ? "bg-secondary mr-12"
+                      : "border border-border bg-background ml-12"
                   }`}
                 >
                   {t.role !== "system" && (

@@ -157,7 +157,7 @@ export default function NewCampaignPage() {
                 i === step
                   ? "bg-primary text-primary-foreground"
                   : i < step
-                  ? "bg-primary/20 text-primary cursor-pointer"
+                  ? "bg-secondary text-foreground cursor-pointer"
                   : "bg-muted text-muted-foreground"
               }`}
             >
@@ -261,7 +261,7 @@ export default function NewCampaignPage() {
                   contacts.map((contact) => (
                     <label
                       key={contact.id}
-                      className={`flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors cursor-pointer ${
+                      className={`flex items-center gap-3 p-3 hover:bg-accent transition-colors cursor-pointer ${
                         contact.do_not_call ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >

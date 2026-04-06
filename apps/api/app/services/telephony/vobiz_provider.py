@@ -69,12 +69,11 @@ class VobizProvider(BaseTelephonyProvider):
         )
 
         # Create SIP participant that dials out
-        sip_uri = f"sip:{to}@{self.sip_domain}"
-
+        # LiveKit SIP API expects a phone number, not a full SIP URI
         participant = await lk.sip.create_sip_participant(
             livekit_api.CreateSIPParticipantRequest(
                 sip_trunk_id=self.sip_trunk_id,
-                sip_call_to=sip_uri,
+                sip_call_to=to,
                 room_name=room,
                 participant_identity=f"phone-{to}",
                 participant_name=f"Phone {to}",

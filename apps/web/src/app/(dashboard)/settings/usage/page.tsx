@@ -32,7 +32,7 @@ function ProgressBar({ value, max, label }: { value: number; max: number; label:
       <div className="h-2.5 w-full rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all ${
-            isFull ? "bg-destructive" : isHigh ? "bg-yellow-500" : "bg-primary"
+            isFull ? "bg-destructive" : isHigh ? "bg-warning" : "bg-primary"
           }`}
           style={{ width: `${percentage}%` }}
         />

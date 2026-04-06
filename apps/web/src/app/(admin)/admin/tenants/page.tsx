@@ -108,12 +108,12 @@ export default function AdminTenantsPage() {
                   {tenants.map((tenant: any) => (
                     <tr
                       key={tenant.id}
-                      className="border-b border-border hover:bg-accent/50 transition-colors"
+                      className="border-b border-border hover:bg-accent transition-colors"
                     >
                       <td className="p-4 font-medium">
                         <Link
                           href={`/admin/tenants/${tenant.id}`}
-                          className="text-primary hover:underline"
+                          className="text-foreground hover:underline"
                         >
                           {tenant.name}
                         </Link>

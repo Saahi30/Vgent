@@ -78,7 +78,7 @@ class Settings(BaseSettings):
 
     # Bolna
     bolna_api_key: str = ""
-    bolna_base_url: str = "https://api.bolna.dev"
+    bolna_base_url: str = "https://api.bolna.ai"
 
     # App
     api_url: str = "http://localhost:8000"

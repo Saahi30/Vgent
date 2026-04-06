@@ -40,7 +40,7 @@ def _handle_bolna_error(exc: httpx.HTTPStatusError) -> None:
 # ── Validate Key ──────────────────────────────────────────────
 
 @router.get("/validate-key")
-async def validate_key(user: CurrentUser = Depends(get_current_user)):
+async def validate_key():
     key = get_settings().bolna_api_key
     if not key:
         return {"valid": False, "message": "No Bolna API key configured"}

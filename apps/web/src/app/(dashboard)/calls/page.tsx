@@ -12,7 +12,7 @@ import { formatDate, formatDuration } from "@/lib/utils";
 import { useModeStore } from "@/store/mode";
 import { toast } from "sonner";
 
-const STATUS_OPTIONS = ["all", "queued", "ringing", "in_progress", "completed", "failed", "no_answer"];
+const STATUS_OPTIONS = ["all", "initiated", "ringing", "in_progress", "completed", "failed", "busy", "no_answer"];
 
 export default function CallsPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function CallsPage() {
 
   useEffect(() => {
     loadCalls();
-  }, [page, statusFilter, isV8]);
+  }, [page, statusFilter, isV8, selectedAgent]);
 
   const loadCalls = () => {
     setLoading(true);

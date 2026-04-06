@@ -53,6 +53,15 @@ async def list_calls(
     )
 
 
+@router.get("/active", response_model=ApiResponse)
+async def get_active_calls(
+    user: CurrentUser = Depends(get_current_user),
+):
+    """Get all currently active calls for the user's tenant (from Redis)."""
+    calls = await get_active_calls_for_tenant(str(user.tenant_id))
+    return ApiResponse(data=calls)
+
+
 @router.get("/{call_id}", response_model=ApiResponse[CallDetailResponse])
 async def get_call_detail(
     call_id: UUID,
@@ -82,15 +91,6 @@ async def get_call_detail(
         turns=[CallTurnResponse.model_validate(t) for t in turns],
         events=[CallEventResponse.model_validate(e) for e in events],
     ))
-
-
-@router.get("/active", response_model=ApiResponse)
-async def get_active_calls(
-    user: CurrentUser = Depends(get_current_user),
-):
-    """Get all currently active calls for the user's tenant (from Redis)."""
-    calls = await get_active_calls_for_tenant(str(user.tenant_id))
-    return ApiResponse(data=calls)
 
 
 @router.post("/initiate", response_model=ApiResponse[CallResponse], status_code=201)

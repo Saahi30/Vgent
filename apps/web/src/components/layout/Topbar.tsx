@@ -35,7 +35,7 @@ function CostCounter() {
           const res = await api.bolna.user.me();
           if (!cancelled && res?.data) {
             setBolnaBalance({
-              balance: res.data.wallet_balance ?? res.data.balance ?? 0,
+              balance: (res.data.wallet ?? res.data.wallet_balance ?? res.data.balance ?? 0) / 100,
               currency: res.data.currency || "USD",
             });
           }

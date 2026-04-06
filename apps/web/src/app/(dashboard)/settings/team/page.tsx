@@ -206,7 +206,7 @@ export default function TeamPage() {
                     className="flex items-center justify-between px-5 py-4"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-foreground font-semibold text-sm">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
                         {(member.full_name || "?")
                           .split(" ")
                           .map((n) => n[0])

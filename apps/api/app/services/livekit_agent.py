@@ -21,6 +21,20 @@ from app.core.security import decrypt_credentials
 logger = logging.getLogger("vgent.agent")
 settings = get_settings()
 
+# Cartesia voice defaults
+CARTESIA_HINGLISH_VOICE = "95d51f79-c397-46f9-b49a-23763d3eaa2d"  # Arushi - Hinglish Speaker
+CARTESIA_HINDI_VOICE = "faf0731e-dfb9-4cfc-8119-259a79b27e12"      # Riya - College Roommate (Hindi)
+CARTESIA_ENGLISH_VOICE = "f786b574-daa5-4673-aa0c-cbe3e8534c02"    # Katie - Friendly Fixer (English)
+
+# Injected at runtime into every agent session — not stored in DB
+VOICE_INSTRUCTIONS = (
+    "\n\nIMPORTANT voice call rules:"
+    "\n- Keep responses under 2 sentences. Be concise."
+    "\n- Match the caller's language — if they speak Hindi, reply in Hindi. If Hinglish, use Hinglish."
+    "\n- Use natural Indian conversational markers (haan, accha, ji, theek hai)."
+    "\n- Never use markdown, bullet points, or formatting — this is a voice call."
+)
+
 
 # ── DB helpers ──────────────────────────────────────────────
 
@@ -101,15 +115,18 @@ def _get_provider_key(provider) -> str:
 
 
 def build_stt(agent_config: AgentModel):
-    """Build a Deepgram STT instance."""
+    """Build Deepgram STT with multilingual Hinglish support."""
     provider = agent_config.stt_provider
     api_key = _get_provider_key(provider) if provider else settings.deepgram_api_key
+
     return deepgram.STT(
         api_key=api_key,
-        language=agent_config.language or "en-US",
+        language="en",
         model="nova-3",
         interim_results=True,
         punctuate=True,
+        smart_format=True,
+        filler_words=True,
     )
 
 
@@ -137,7 +154,30 @@ def build_llm(agent_config: AgentModel):
 
 
 def build_tts(agent_config: AgentModel):
-    """Build a TTS instance. Uses Deepgram Aura (fast, streaming, reliable)."""
+    """Build TTS: Sarvam (explicit) → Cartesia (always, human-sounding) → Deepgram (last resort)."""
+
+    # 1. Explicit Sarvam provider configured on the agent
+    if agent_config.tts_provider and agent_config.tts_provider.provider_name == "sarvam":
+        from livekit.agents.tts import StreamAdapter
+        from livekit.agents import tokenize
+        from app.services.tts.sarvam_lk_plugin import SarvamLKTTS
+        sarvam = SarvamLKTTS(
+            api_key=_get_provider_key(agent_config.tts_provider) or settings.sarvam_api_key,
+            voice=agent_config.voice_id or "meera",
+        )
+        return StreamAdapter(tts=sarvam, sentence_tokenizer=tokenize.basic.SentenceTokenizer())
+
+    # 2. Sarvam TTS — natural Indian voices for Hindi/Hinglish callers
+    if settings.sarvam_api_key:
+        from livekit.agents.tts import StreamAdapter
+        from livekit.agents import tokenize
+        from app.services.tts.sarvam_lk_plugin import SarvamLKTTS
+        voice = agent_config.voice_id or "anushka"  # Natural Hindi female voice
+        sarvam = SarvamLKTTS(api_key=settings.sarvam_api_key, voice=voice)
+        return StreamAdapter(tts=sarvam, sentence_tokenizer=tokenize.basic.SentenceTokenizer())
+
+    # 3. Deepgram Aura — fallback if Sarvam not configured
+    logger.warning("Sarvam not configured, falling back to Deepgram Aura TTS")
     return deepgram.TTS(
         api_key=settings.deepgram_api_key,
         model="aura-2-andromeda-en",
@@ -152,7 +192,7 @@ class VgentAgent(Agent):
     def __init__(self, call_id: str, agent_config: AgentModel, call_start: datetime,
                  session_factory=None):
         super().__init__(
-            instructions=agent_config.system_prompt,
+            instructions=agent_config.system_prompt + VOICE_INSTRUCTIONS,
         )
         self.call_id = call_id
         self.agent_config = agent_config
@@ -164,7 +204,6 @@ class VgentAgent(Agent):
         """Called when the agent session starts. Send the first message."""
         if self.agent_config.first_message:
             await self.session.say(self.agent_config.first_message)
-            # Save turn using worker-local DB session if available
             if self._session_factory:
                 from app.models.call import CallTurn
                 elapsed_ms = int((datetime.now(timezone.utc) - self.call_start).total_seconds() * 1000)

@@ -184,7 +184,7 @@ export default function KnowledgeBaseDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
+              <BookOpen className="h-5 w-5 text-primary" />
               <h1 className="text-2xl font-bold">{kb.name}</h1>
             </div>
             {kb.description && (

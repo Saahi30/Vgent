@@ -63,9 +63,12 @@ class VobizProvider(BaseTelephonyProvider):
 
         lk = self._get_lk_api()
 
-        # Create the room
+        # Create the room with agent dispatch so the worker auto-joins
         await lk.room.create_room(
-            livekit_api.CreateRoomRequest(name=room)
+            livekit_api.CreateRoomRequest(
+                name=room,
+                agents=[livekit_api.RoomAgentDispatch(agent_name="vgent-voice")],
+            )
         )
 
         # Create SIP participant that dials out
@@ -77,6 +80,7 @@ class VobizProvider(BaseTelephonyProvider):
                 room_name=room,
                 participant_identity=f"phone-{to}",
                 participant_name=f"Phone {to}",
+                krisp_enabled=True,
             )
         )
 

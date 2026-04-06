@@ -171,8 +171,8 @@ export default function LiveMonitorPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Phone className="h-5 w-5 text-muted-foreground" />
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Phone className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold">{calls.length}</p>
@@ -182,8 +182,8 @@ export default function LiveMonitorPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Activity className="h-5 w-5 text-muted-foreground" />
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Activity className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold">{callsToday}</p>
@@ -193,8 +193,8 @@ export default function LiveMonitorPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Radio className="h-5 w-5 text-muted-foreground" />
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Radio className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold">

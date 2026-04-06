@@ -95,7 +95,7 @@ export default function KnowledgeBasesPage() {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-5 w-5 text-muted-foreground" />
+                      <BookOpen className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold">{kb.name}</h3>
                     </div>
                     <Button

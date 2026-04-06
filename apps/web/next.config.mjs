@@ -7,15 +7,28 @@ const monorepoRoot = join(__dirname, "../..");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: monorepoRoot,
-  webpack: (config, { isServer }) => {
-    // Prevent Webpack from snapshotting directories outside the monorepo
-    // (fixes freeze caused by ~/node_modules + ~/package-lock.json)
+  webpack: (config) => {
     config.snapshot = {
       managedPaths: [join(monorepoRoot, "node_modules")],
       immutablePaths: [],
       buildDependencies: { hash: true, timestamp: true },
       module: { timestamp: true },
       resolve: { timestamp: true },
+    };
+    config.watchOptions = {
+      ignored: ["**/node_modules/**", "**/.next/**", "**/.git/**"],
+      poll: 1000,
+      aggregateTimeout: 500,
+    };
+    // Prevent module resolution from walking up to ~/node_modules
+    config.resolve = {
+      ...config.resolve,
+      modules: [
+        join(__dirname, "node_modules"),
+        join(monorepoRoot, "node_modules"),
+        "node_modules",
+      ],
+      symlinks: false,
     };
     return config;
   },

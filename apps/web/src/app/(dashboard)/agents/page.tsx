@@ -54,8 +54,8 @@ export default function AgentsPage() {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-muted-foreground" />
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <p className="font-semibold">{agent.name}</p>

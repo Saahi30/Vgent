@@ -113,7 +113,7 @@ export default function AdminTenantsPage() {
                       <td className="p-4 font-medium">
                         <Link
                           href={`/admin/tenants/${tenant.id}`}
-                          className="text-foreground hover:underline"
+                          className="text-primary hover:underline"
                         >
                           {tenant.name}
                         </Link>

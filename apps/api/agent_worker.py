@@ -24,9 +24,13 @@ from livekit.agents import (
     JobContext,
     JobRequest,
     WorkerOptions,
+    RoomInputOptions,
+    TurnHandlingOptions,
+    EndpointingOptions,
+    InterruptionOptions,
     cli,
 )
-from livekit.plugins import deepgram, openai as lk_openai, silero
+from livekit.plugins import deepgram, openai as lk_openai, silero, noise_cancellation
 
 from app.core.config import get_settings
 from app.services.livekit_agent import (
@@ -87,7 +91,6 @@ async def _update_call(session_factory, call_id: str, **kwargs):
 
 
 async def _save_turn(session_factory, call_id: str, tenant_id: str, role: str, content: str, elapsed_ms: int):
-    from sqlalchemy.ext.asyncio import AsyncSession as AS
     async with session_factory() as db:
         db.add(CallTurn(call_id=call_id, tenant_id=tenant_id, role=role, content=content, timestamp_ms=elapsed_ms))
         await db.commit()
@@ -116,14 +119,42 @@ async def entrypoint(ctx: JobContext):
     stt_instance = build_stt(agent_config)
     llm_instance = build_llm(agent_config)
     tts_instance = build_tts(agent_config)
-    vad_instance = silero.VAD.load()
 
-    # Create session
+    # VAD tuned for noisy Indian environments
+    vad_instance = silero.VAD.load(
+        min_speech_duration=0.15,
+        min_silence_duration=0.35,
+        prefix_padding_duration=0.3,
+        activation_threshold=0.55,
+        sample_rate=16000,
+    )
+
+    # Noise cancellation optimized for telephony
+    nc = noise_cancellation.BVCTelephony()
+
+    # Create session with low-latency turn handling
     session = AgentSession(
         stt=stt_instance,
         llm=llm_instance,
         tts=tts_instance,
         vad=vad_instance,
+        turn_handling=TurnHandlingOptions(
+            endpointing=EndpointingOptions(
+                mode="dynamic",
+                min_delay=0.3,
+                max_delay=1.5,
+            ),
+            interruption=InterruptionOptions(
+                enabled=True,
+                mode="adaptive",
+                min_duration=0.4,
+                min_words=1,
+                resume_false_interruption=True,
+                false_interruption_timeout=1.5,
+            ),
+        ),
+        preemptive_generation=True,
+        aec_warmup_duration=0.0,  # Disable AEC warmup — was causing "speaks then stops" cutout
     )
 
     # Log user speech to DB
@@ -147,8 +178,12 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")
 
-    # Start the agent session with the room from JobContext
-    await session.start(agent, room=ctx.room)
+    # Start the agent session with noise cancellation
+    await session.start(
+        agent,
+        room=ctx.room,
+        room_input_options=RoomInputOptions(noise_cancellation=nc),
+    )
 
     logger.info(f"Agent session started in room {room_name}")
 
@@ -184,7 +219,8 @@ if __name__ == "__main__":
     logger.info(f"  LiveKit: {settings.livekit_url}")
     logger.info(f"  Groq: {'configured' if settings.groq_api_key else 'NOT SET'}")
     logger.info(f"  Deepgram: {'configured' if settings.deepgram_api_key else 'NOT SET'}")
-    logger.info(f"  ElevenLabs: {'configured' if settings.elevenlabs_api_key else 'NOT SET'}")
+    logger.info(f"  Cartesia: {'configured' if settings.cartesia_api_key else 'NOT SET'}")
+    logger.info(f"  Sarvam: {'configured' if settings.sarvam_api_key else 'NOT SET'}")
     logger.info(f"  Vobiz SIP: {'configured' if settings.vobiz_sip_trunk_id else 'NOT SET'}")
     logger.info("=" * 50)
 
@@ -195,6 +231,7 @@ if __name__ == "__main__":
             ws_url=settings.livekit_url,
             api_key=settings.livekit_api_key,
             api_secret=settings.livekit_api_secret,
+            agent_name="vgent-voice",
             num_idle_processes=0,
         )
     )

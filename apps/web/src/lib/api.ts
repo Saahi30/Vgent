@@ -210,4 +210,170 @@ export const api = {
   },
 
   health: () => request<any>("/health"),
+
+  // ── Bolna Mode ──────────────────────────────────────────────
+  bolna: {
+    validateKey: () => request<{ valid: boolean; message?: string }>("/bolna/validate-key"),
+
+    // User / Account
+    user: {
+      me: () => request<{ data: any }>("/bolna/user/me"),
+      info: () => request<{ data: any }>("/bolna/user/info"),
+    },
+
+    // Agents
+    agents: {
+      list: () => request<{ data: any[] }>("/bolna/agents"),
+      get: (id: string) => request<{ data: any }>(`/bolna/agents/${id}`),
+      create: (agent_config: any) =>
+        request<{ data: any }>("/bolna/agents", { method: "POST", body: JSON.stringify({ agent_config }) }),
+      update: (id: string, agent_config: any) =>
+        request<{ data: any }>(`/bolna/agents/${id}`, { method: "PUT", body: JSON.stringify({ agent_config }) }),
+      patch: (id: string, updates: any) =>
+        request<{ data: any }>(`/bolna/agents/${id}`, { method: "PATCH", body: JSON.stringify(updates) }),
+      delete: (id: string) =>
+        request<{ data: any }>(`/bolna/agents/${id}`, { method: "DELETE" }),
+      stopAllCalls: (id: string) =>
+        request<{ data: any }>(`/bolna/agents/${id}/stop`, { method: "POST" }),
+    },
+
+    // Calls
+    calls: {
+      make: (data: { agent_id: string; recipient_phone_number: string; user_data?: any; retry_config?: any }) =>
+        request<{ data: any }>("/bolna/calls", { method: "POST", body: JSON.stringify(data) }),
+      stop: (executionId: string) =>
+        request<{ data: any }>(`/bolna/calls/${executionId}/stop`, { method: "POST" }),
+    },
+
+    // Executions
+    executions: {
+      listAll: (params?: { page_number?: number; page_size?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.page_number) qs.set("page_number", String(params.page_number));
+        if (params?.page_size) qs.set("page_size", String(params.page_size));
+        return request<{ data: any }>(`/bolna/executions?${qs}`);
+      },
+      get: (id: string) => request<{ data: any }>(`/bolna/executions/${id}`),
+      getLog: (id: string) => request<{ data: any }>(`/bolna/executions/${id}/log`),
+      list: (agentId: string, params?: { page_number?: number; page_size?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.page_number) qs.set("page_number", String(params.page_number));
+        if (params?.page_size) qs.set("page_size", String(params.page_size));
+        return request<{ data: any }>(`/bolna/agents/${agentId}/executions?${qs}`);
+      },
+    },
+
+    // Batches
+    batches: {
+      create: (agentId: string, file: File) => {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("agent_id", agentId);
+        return fetch(`${API_URL}/api/bolna/batches`, {
+          method: "POST",
+          body: form,
+        }).then(r => r.json());
+      },
+      schedule: (batchId: string, scheduledAt?: string) =>
+        request<{ data: any }>(`/bolna/batches/${batchId}/schedule`, {
+          method: "POST",
+          body: JSON.stringify({ scheduled_at: scheduledAt }),
+        }),
+      stop: (batchId: string) =>
+        request<{ data: any }>(`/bolna/batches/${batchId}/stop`, { method: "POST" }),
+      get: (batchId: string) => request<{ data: any }>(`/bolna/batches/${batchId}`),
+      delete: (batchId: string) =>
+        request<{ data: any }>(`/bolna/batches/${batchId}`, { method: "DELETE" }),
+      list: (agentId: string) => request<{ data: any }>(`/bolna/agents/${agentId}/batches`),
+      executions: (batchId: string) => request<{ data: any }>(`/bolna/batches/${batchId}/executions`),
+    },
+
+    // Knowledge Bases
+    knowledgebases: {
+      list: () => request<{ data: any[] }>("/bolna/knowledgebases"),
+      get: (ragId: string) => request<{ data: any }>(`/bolna/knowledgebases/${ragId}`),
+      createFromFile: (file: File) => {
+        const form = new FormData();
+        form.append("file", file);
+        return fetch(`${API_URL}/api/bolna/knowledgebases`, {
+          method: "POST",
+          body: form,
+        }).then(r => r.json());
+      },
+      createFromURL: (url: string) =>
+        request<{ data: any }>("/bolna/knowledgebases/url", { method: "POST", body: JSON.stringify({ url }) }),
+      delete: (ragId: string) => request<{ data: any }>(`/bolna/knowledgebases/${ragId}`, { method: "DELETE" }),
+    },
+
+    // Phone Numbers
+    phoneNumbers: {
+      list: () => request<{ data: any[] }>("/bolna/phone-numbers"),
+      search: (params?: { country_iso?: string; area_code?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.country_iso) qs.set("country_iso", params.country_iso);
+        if (params?.area_code) qs.set("area_code", params.area_code);
+        return request<{ data: any[] }>(`/bolna/phone-numbers/search?${qs}`);
+      },
+      buy: (phoneNumber: string) =>
+        request<{ data: any }>("/bolna/phone-numbers/buy", { method: "POST", body: JSON.stringify({ phone_number: phoneNumber }) }),
+      delete: (phoneNumberId: string) =>
+        request<{ data: any }>(`/bolna/phone-numbers/${phoneNumberId}`, { method: "DELETE" }),
+    },
+
+    // Inbound Call Setup
+    inbound: {
+      setup: (agentId: string, phoneNumber: string) =>
+        request<{ data: any }>("/bolna/inbound/setup", {
+          method: "POST",
+          body: JSON.stringify({ agent_id: agentId, phone_number: phoneNumber }),
+        }),
+      unlink: (phoneNumber: string) =>
+        request<{ data: any }>("/bolna/inbound/unlink", {
+          method: "POST",
+          body: JSON.stringify({ phone_number: phoneNumber }),
+        }),
+      deleteAgent: (phoneNumber: string) =>
+        request<{ data: any }>(`/bolna/inbound/agent/${encodeURIComponent(phoneNumber)}`, { method: "DELETE" }),
+    },
+
+    // Voices
+    voices: {
+      list: () => request<{ data: any[] }>("/bolna/voices"),
+    },
+
+    // Providers (Bolna-side LLM/telephony/voice providers)
+    bolnaProviders: {
+      list: () => request<{ data: any[] }>("/bolna/providers"),
+      add: (config: any) =>
+        request<{ data: any }>("/bolna/providers", { method: "POST", body: JSON.stringify(config) }),
+      delete: (keyName: string) =>
+        request<{ data: any }>(`/bolna/providers/${keyName}`, { method: "DELETE" }),
+    },
+
+    // Extractions
+    extractions: {
+      list: () => request<{ data: any[] }>("/bolna/extractions"),
+      get: (templateId: string) => request<{ data: any }>(`/bolna/extractions/${templateId}`),
+    },
+
+    // SIP Trunks
+    sipTrunks: {
+      list: () => request<{ data: any[] }>("/bolna/sip-trunks"),
+      create: (config: any) =>
+        request<{ data: any }>("/bolna/sip-trunks", { method: "POST", body: JSON.stringify(config) }),
+      get: (trunkId: string) => request<{ data: any }>(`/bolna/sip-trunks/${trunkId}`),
+      update: (trunkId: string, updates: any) =>
+        request<{ data: any }>(`/bolna/sip-trunks/${trunkId}`, { method: "PATCH", body: JSON.stringify(updates) }),
+      delete: (trunkId: string) =>
+        request<{ data: any }>(`/bolna/sip-trunks/${trunkId}`, { method: "DELETE" }),
+      addNumber: (trunkId: string, phoneNumber: string) =>
+        request<{ data: any }>(`/bolna/sip-trunks/${trunkId}/numbers`, {
+          method: "POST",
+          body: JSON.stringify({ phone_number: phoneNumber }),
+        }),
+      listNumbers: (trunkId: string) => request<{ data: any[] }>(`/bolna/sip-trunks/${trunkId}/numbers`),
+      deleteNumber: (trunkId: string, phoneNumberId: string) =>
+        request<{ data: any }>(`/bolna/sip-trunks/${trunkId}/numbers/${phoneNumberId}`, { method: "DELETE" }),
+    },
+  },
 };

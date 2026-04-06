@@ -6,7 +6,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
-from app.routers import auth, tenants, agents, campaigns, contacts, calls, providers, knowledge_base, admin, team
+from app.routers import auth, tenants, agents, campaigns, contacts, calls, providers, knowledge_base, admin, team, bolna
 from app.routers import ws
 from app.routers.webhooks import twilio as twilio_webhook, vobiz as vobiz_webhook
 
@@ -77,6 +77,7 @@ app.include_router(providers.router, prefix="/api")
 app.include_router(knowledge_base.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(team.router, prefix="/api")
+app.include_router(bolna.router, prefix="/api")
 
 # WebSocket endpoints
 app.include_router(ws.router, prefix="/api")

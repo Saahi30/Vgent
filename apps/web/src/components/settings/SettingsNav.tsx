@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const SETTINGS_TABS = [
   { href: "/settings/providers", label: "Providers" },
+  { href: "/settings/v8", label: "V8" },
   { href: "/settings/usage", label: "Usage" },
   { href: "/settings/team", label: "Team" },
 ];

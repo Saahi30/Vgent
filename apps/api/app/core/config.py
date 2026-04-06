@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     elevenlabs_api_key: str = ""
     cartesia_api_key: str = ""
 
+    # Bolna
+    bolna_api_key: str = ""
+    bolna_base_url: str = "https://api.bolna.dev"
+
     # App
     api_url: str = "http://localhost:8000"
     app_url: str = "http://localhost:3000"

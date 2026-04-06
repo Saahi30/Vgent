@@ -7,8 +7,9 @@ import { useUIStore } from "@/store/ui";
 import { useModeStore, type PlatformMode } from "@/store/mode";
 import {
   Bot, Phone, Users, Megaphone, BookOpen, Settings,
-  Activity, LayoutDashboard, Shield, ChevronLeft, Zap,
+  Activity, LayoutDashboard, Shield, ChevronLeft, Zap, LogOut,
 } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -29,42 +30,46 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const { mode, setMode } = useModeStore();
+  const logout = useAuthStore((s) => s.logout);
 
   const isV8 = mode === "v8";
 
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-background transition-all duration-300 flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 flex flex-col",
         sidebarOpen ? "w-64" : "w-16"
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border">
+      {/* Logo — Carbon masthead style */}
+      <div className="flex h-12 items-center justify-between px-4 border-b border-border">
         {sidebarOpen && (
-          <Link href="/" className="text-xl font-semibold tracking-tight text-primary">
+          <Link href="/" className="text-body-long-01 font-semibold tracking-tight text-foreground">
             Vgent
           </Link>
         )}
-        <button onClick={toggleSidebar} className="p-1.5 rounded-md hover:bg-accent text-muted-foreground">
-          <ChevronLeft className={cn("h-5 w-5 transition-transform", !sidebarOpen && "rotate-180")} />
+        <button
+          onClick={toggleSidebar}
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-layer-hover transition-colors"
+        >
+          <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
         </button>
       </div>
 
-      {/* Mode Toggle */}
-      <div className="px-3 pt-3">
+      {/* Mode Toggle — Carbon toggle style */}
+      <div className="px-3 pt-4">
         <div className={cn(
-          "flex items-center rounded-lg border border-border bg-muted/50 p-0.5",
+          "flex items-center bg-layer-01 p-0.5",
           !sidebarOpen && "flex-col gap-0.5"
         )}>
           <button
             onClick={() => setMode("custom")}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+              "flex items-center justify-center gap-1.5 px-3 py-2 text-caption-01 font-medium transition-all",
               sidebarOpen ? "flex-1" : "w-full",
               !isV8
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-layer-02 text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-layer-hover"
             )}
           >
             <Bot className="h-3.5 w-3.5 shrink-0" />
@@ -73,11 +78,11 @@ export function Sidebar() {
           <button
             onClick={() => setMode("v8")}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+              "flex items-center justify-center gap-1.5 px-3 py-2 text-caption-01 font-medium transition-all",
               sidebarOpen ? "flex-1" : "w-full",
               isV8
-                ? "bg-amber-500/10 text-amber-600 shadow-sm border border-amber-500/20"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-layer-hover"
             )}
           >
             <Zap className="h-3.5 w-3.5 shrink-0" />
@@ -86,8 +91,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex flex-col gap-1 p-3 mt-2 flex-1">
+      {/* Navigation — Carbon side-nav pattern */}
+      <nav className="flex flex-col mt-4 flex-1">
         {navItems.map((item: any) => {
           const prefix = item.matchPrefix || item.href;
           const isActive = pathname === item.href || (prefix !== "/" && pathname.startsWith(prefix));
@@ -96,10 +101,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
                 isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  ? "border-l-primary bg-layer-01 text-primary font-medium"
+                  : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
@@ -108,8 +113,8 @@ export function Sidebar() {
           );
         })}
 
-        {/* Admin section */}
-        <div className="my-2 border-t border-border" />
+        {/* Admin divider */}
+        <div className="my-2 mx-4 border-t border-border" />
         {adminItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -117,10 +122,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
                 isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  ? "border-l-primary bg-layer-01 text-primary font-medium"
+                  : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
@@ -130,15 +135,24 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Mode indicator at bottom */}
-      {sidebarOpen && isV8 && (
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
-            <Zap className="h-3.5 w-3.5" />
-            <span>V8 Mode Active</span>
+      {/* Bottom section */}
+      <div className="border-t border-border">
+        {sidebarOpen && isV8 && (
+          <div className="px-3 pt-3">
+            <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 text-caption-01 text-primary">
+              <Zap className="h-3.5 w-3.5" />
+              <span>V8 Mode Active</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 w-full px-4 py-3 text-body-short-01 text-muted-foreground hover:bg-layer-hover hover:text-foreground transition-colors"
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          {sidebarOpen && <span>Log out</span>}
+        </button>
+      </div>
     </aside>
   );
 }

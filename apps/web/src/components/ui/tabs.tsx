@@ -27,7 +27,7 @@ function TabsList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
   return (
     <div
       className={cn(
-        "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+        "flex items-center border-b border-border",
         className
       )}
       {...props}
@@ -41,16 +41,17 @@ interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 function TabsTrigger({ value, className, ...props }: TabsTriggerProps) {
   const ctx = React.useContext(TabsContext);
+  const isActive = ctx.value === value;
   return (
     <button
       type="button"
       role="tab"
-      aria-selected={ctx.value === value}
+      aria-selected={isActive}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        ctx.value === value
-          ? "bg-background text-foreground shadow-sm"
-          : "hover:bg-accent hover:text-foreground",
+        "relative px-4 py-3 text-body-short-01 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isActive
+          ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-primary"
+          : "text-muted-foreground hover:text-foreground hover:bg-layer-hover",
         className
       )}
       onClick={() => ctx.onValueChange(value)}
@@ -69,7 +70,7 @@ function TabsContent({ value, className, ...props }: TabsContentProps) {
   return (
     <div
       role="tabpanel"
-      className={cn("mt-2 ring-offset-background focus-visible:outline-none", className)}
+      className={cn("mt-4 focus-visible:outline-none", className)}
       {...props}
     />
   );

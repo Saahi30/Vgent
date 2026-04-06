@@ -4,28 +4,50 @@
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 153 60% 53%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 153 60% 53%;
-    --radius: 0.375rem;
-    --success: 153 60% 53%;
-    --warning: 38 70% 55%;
+    /* IBM Carbon Gray 100 Dark Theme */
+    --background: 0 0% 9%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 96%;
+    /* IBM Blue 40 for dark theme interactive */
+    --primary: 216 84% 74%;
+    --primary-foreground: 0 0% 9%;
+    /* Gray 90 */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 96%;
+    /* Gray 80 */
+    --muted: 0 0% 24%;
+    --muted-foreground: 0 0% 78%;
+    /* Gray 80 */
+    --accent: 0 0% 22%;
+    --accent-foreground: 0 0% 96%;
+    /* Red 50 */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 96%;
+    /* Gray 80 */
+    --border: 0 0% 22%;
+    /* Gray 70 */
+    --input: 0 0% 22%;
+    /* IBM Blue 40 */
+    --ring: 216 84% 74%;
+    /* 0px - Carbon signature */
+    --radius: 0px;
+    /* Status */
+    --success: 142 64% 36%;
+    --warning: 45 86% 56%;
+
+    /* Carbon-specific tokens */
+    --cds-layer-01: 0 0% 15%;
+    --cds-layer-02: 0 0% 22%;
+    --cds-layer-hover: 0 0% 28%;
+    --cds-text-secondary: 0 0% 78%;
+    --cds-text-placeholder: 0 0% 44%;
+    --cds-border-subtle: 0 0% 22%;
+    --cds-focus: 216 84% 74%;
+    --cds-interactive: 216 84% 74%;
+    --cds-overlay: 0 0% 0%;
   }
 }
 
@@ -35,20 +57,32 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* Carbon-style scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(0 0% 7%);
+  background: hsl(0 0% 9%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(0 0% 22%);
-  border-radius: 3px;
+  background: hsl(0 0% 28%);
+  border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(0 0% 35%);
+  background: hsl(0 0% 40%);
+}
+
+/* Carbon focus ring utility */
+@layer utilities {
+  .carbon-focus {
+    @apply outline-none ring-2 ring-ring ring-offset-0;
+    box-shadow: inset 0 0 0 1px hsl(var(--ring)), inset 0 0 0 2px hsl(var(--background));
+  }
 }

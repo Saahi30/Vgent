@@ -15,25 +15,29 @@ import base64
 import logging
 
 import aiohttp
-from livekit.agents import tts, utils, DEFAULT_API_CONNECT_OPTIONS
+from livekit.agents import tts, DEFAULT_API_CONNECT_OPTIONS
 
 logger = logging.getLogger("vgent.tts.sarvam")
 
 SARVAM_API_URL = "https://api.sarvam.ai/text-to-speech"
 SARVAM_MODEL = "bulbul:v2"
 
-# Available Sarvam voices (as of 2026-04)
-# Female: anushka, manisha, vidya, arya, ritu, priya, neha, pooja, simran, kavya,
-#         ishita, shreya, roopa, amelia, sophia, tanya, shruti, suhani, kavitha, rupali
-# Male: abhilash, karun, hitesh, aditya, rahul, rohan, amit, dev, ratan, varun,
-#       manan, sumit, kabir, aayan, shubh, ashutosh, advait, anand, tarun, sunny,
-#       mani, gokul, vijay, mohit, rehan, soham
+# All valid Sarvam voice names (as of 2026-04)
+SARVAM_VOICES = {
+    "anushka", "abhilash", "manisha", "vidya", "arya", "karun", "hitesh",
+    "aditya", "ritu", "priya", "neha", "rahul", "pooja", "rohan", "simran",
+    "kavya", "amit", "dev", "ishita", "shreya", "ratan", "varun", "manan",
+    "sumit", "roopa", "kabir", "aayan", "shubh", "ashutosh", "advait",
+    "amelia", "sophia", "anand", "tanya", "tarun", "sunny", "mani", "gokul",
+    "vijay", "shruti", "suhani", "mohit", "kavitha", "rehan", "soham", "rupali",
+}
 
 
 class SarvamLKTTS(tts.TTS):
     """Sarvam AI TTS as a livekit-agents plugin (non-streaming)."""
 
-    def __init__(self, *, api_key: str, voice: str = "anushka", language: str = "hi-IN"):
+    def __init__(self, *, api_key: str, voice: str = "anushka", language: str = "hi-IN",
+                 http_session: aiohttp.ClientSession | None = None):
         super().__init__(
             capabilities=tts.TTSCapabilities(streaming=False),
             sample_rate=22050,
@@ -42,6 +46,7 @@ class SarvamLKTTS(tts.TTS):
         self._api_key = api_key
         self._voice = voice
         self._language = language
+        self._http_session = http_session
 
     def synthesize(self, text: str, *, conn_options=DEFAULT_API_CONNECT_OPTIONS):
         return _SarvamChunkedStream(
@@ -51,15 +56,17 @@ class SarvamLKTTS(tts.TTS):
             api_key=self._api_key,
             voice=self._voice,
             language=self._language,
+            http_session=self._http_session,
         )
 
 
 class _SarvamChunkedStream(tts.ChunkedStream):
-    def __init__(self, *, tts, input_text, conn_options, api_key, voice, language):
+    def __init__(self, *, tts, input_text, conn_options, api_key, voice, language, http_session):
         super().__init__(tts=tts, input_text=input_text, conn_options=conn_options)
         self._api_key = api_key
         self._voice = voice
         self._language = language
+        self._http_session = http_session
 
     async def _run(self, output_emitter: tts.AudioEmitter):
         # Auto-detect: if text is mostly ASCII, use en-IN; otherwise use configured language
@@ -74,8 +81,10 @@ class _SarvamChunkedStream(tts.ChunkedStream):
             "enable_preprocessing": True,
         }
 
+        owns_session = self._http_session is None
+        session = self._http_session or aiohttp.ClientSession()
         try:
-            async with utils.http_context.http_session().post(
+            async with session.post(
                 SARVAM_API_URL,
                 json=payload,
                 headers={
@@ -84,14 +93,28 @@ class _SarvamChunkedStream(tts.ChunkedStream):
                 },
                 timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
-                resp.raise_for_status()
+                if resp.status != 200:
+                    body = await resp.text()
+                    logger.error(f"Sarvam TTS {resp.status}: {body}")
+                    raise Exception(f"Sarvam API {resp.status}: {body}")
                 data = await resp.json()
 
             audios = data.get("audios", [])
             if audios:
                 audio_bytes = base64.b64decode(audios[0])
+                output_emitter.initialize(
+                    request_id="sarvam-tts",
+                    sample_rate=22050,
+                    num_channels=1,
+                    mime_type="audio/pcm",
+                )
                 output_emitter.push(audio_bytes)
+            else:
+                logger.error("Sarvam TTS returned no audio")
 
         except Exception as e:
             logger.error(f"Sarvam TTS error: {e}")
-            raise tts.TTSError(f"Sarvam TTS failed: {e}") from e
+            raise
+        finally:
+            if owns_session:
+                await session.close()

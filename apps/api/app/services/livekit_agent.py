@@ -114,7 +114,7 @@ def _get_provider_key(provider) -> str:
     return creds.get("api_key", "")
 
 
-def build_stt(agent_config: AgentModel):
+def build_stt(agent_config: AgentModel, http_session=None):
     """Build Deepgram STT with multilingual Hinglish support."""
     provider = agent_config.stt_provider
     api_key = _get_provider_key(provider) if provider else settings.deepgram_api_key
@@ -127,6 +127,7 @@ def build_stt(agent_config: AgentModel):
         punctuate=True,
         smart_format=True,
         filler_words=True,
+        http_session=http_session,
     )
 
 
@@ -153,8 +154,8 @@ def build_llm(agent_config: AgentModel):
     )
 
 
-def build_tts(agent_config: AgentModel):
-    """Build TTS: Sarvam (explicit) → Cartesia (always, human-sounding) → Deepgram (last resort)."""
+def build_tts(agent_config: AgentModel, http_session=None):
+    """Build TTS: Sarvam (natural Indian voice) → Deepgram (fallback)."""
 
     # 1. Explicit Sarvam provider configured on the agent
     if agent_config.tts_provider and agent_config.tts_provider.provider_name == "sarvam":
@@ -163,7 +164,8 @@ def build_tts(agent_config: AgentModel):
         from app.services.tts.sarvam_lk_plugin import SarvamLKTTS
         sarvam = SarvamLKTTS(
             api_key=_get_provider_key(agent_config.tts_provider) or settings.sarvam_api_key,
-            voice=agent_config.voice_id or "meera",
+            voice=agent_config.voice_id or "anushka",
+            http_session=http_session,
         )
         return StreamAdapter(tts=sarvam, sentence_tokenizer=tokenize.basic.SentenceTokenizer())
 
@@ -171,9 +173,9 @@ def build_tts(agent_config: AgentModel):
     if settings.sarvam_api_key:
         from livekit.agents.tts import StreamAdapter
         from livekit.agents import tokenize
-        from app.services.tts.sarvam_lk_plugin import SarvamLKTTS
-        voice = agent_config.voice_id or "anushka"  # Natural Hindi female voice
-        sarvam = SarvamLKTTS(api_key=settings.sarvam_api_key, voice=voice)
+        from app.services.tts.sarvam_lk_plugin import SarvamLKTTS, SARVAM_VOICES
+        voice = agent_config.voice_id if agent_config.voice_id in SARVAM_VOICES else "anushka"
+        sarvam = SarvamLKTTS(api_key=settings.sarvam_api_key, voice=voice, http_session=http_session)
         return StreamAdapter(tts=sarvam, sentence_tokenizer=tokenize.basic.SentenceTokenizer())
 
     # 3. Deepgram Aura — fallback if Sarvam not configured

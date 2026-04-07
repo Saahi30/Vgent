@@ -6,6 +6,7 @@ const monorepoRoot = join(__dirname, "../..");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   outputFileTracingRoot: monorepoRoot,
   webpack: (config) => {
     config.snapshot = {

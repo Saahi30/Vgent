@@ -7,8 +7,14 @@ services:
     dockerfilePath: apps/api/Dockerfile
     dockerContext: apps/api
     plan: free
+    healthCheckPath: /api/health
     envVars:
       - fromGroup: vgent-envs
+      - key: REDIS_URL
+        fromService:
+          name: vgent-redis
+          type: redis
+          property: connectionString
 
   # Celery worker (for background tasks)
   - type: worker
@@ -20,13 +26,33 @@ services:
     dockerCommand: celery -A celery_app worker --loglevel=info
     envVars:
       - fromGroup: vgent-envs
+      - key: REDIS_URL
+        fromService:
+          name: vgent-redis
+          type: redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: vgent-redis
+          type: redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: vgent-redis
+          type: redis
+          property: connectionString
+
+  # Redis for Celery + caching
+  - type: redis
+    name: vgent-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
 envVarGroups:
   - name: vgent-envs
     envVars:
       - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
         sync: false
       - key: SUPABASE_URL
         sync: false
@@ -67,4 +93,26 @@ envVarGroups:
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: CARTESIA_API_KEY
+        sync: false
+      - key: BOLNA_API_KEY
+        sync: false
+      - key: BOLNA_BASE_URL
+        sync: false
+      - key: VOBIZ_SIP_TRUNK_ID
+        sync: false
+      - key: VOBIZ_SIP_DOMAIN
+        sync: false
+      - key: VOBIZ_USERNAME
+        sync: false
+      - key: VOBIZ_PASSWORD
+        sync: false
+      - key: VOBIZ_OUTBOUND_NUMBER
+        sync: false
+      - key: DEFAULT_TRANSFER_NUMBER
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: COHERE_API_KEY
+        sync: false
+      - key: ASSEMBLYAI_API_KEY
         sync: false

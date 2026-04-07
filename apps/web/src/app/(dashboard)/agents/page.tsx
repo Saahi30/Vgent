@@ -10,6 +10,7 @@ import { Plus, Bot, Cpu, Zap, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useModeStore } from "@/store/mode";
 import { toast } from "sonner";
+import { PageTransition, FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/motion";
 
 export default function AgentsPage() {
   const { mode } = useModeStore();
@@ -53,113 +54,125 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            Agents
-            {isV8 && <Badge variant="outline" className="text-amber-600 border-amber-500/30 gap-1"><Zap className="h-3 w-3" /> V8</Badge>}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isV8 ? "Manage your V8 voice AI agents" : "Create and manage your AI voice agents"}
-          </p>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Agents
+              {isV8 && <Badge variant="outline" className="text-amber-600 border-amber-500/30 gap-1"><Zap className="h-3 w-3" /> V8</Badge>}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {isV8 ? "Manage your V8 voice AI agents" : "Create and manage your AI voice agents"}
+            </p>
+          </div>
+          <Link href={isV8 ? "/agents/new-v8" : "/agents/new"}>
+            <Button><Plus className="h-4 w-4 mr-2" /> Create Agent</Button>
+          </Link>
         </div>
-        <Link href={isV8 ? "/agents/new-v8" : "/agents/new"}>
-          <Button><Plus className="h-4 w-4 mr-2" /> Create Agent</Button>
-        </Link>
-      </div>
+      </FadeIn>
 
       {agents.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            {isV8 ? <Zap className="h-12 w-12 text-amber-500 mb-4" /> : <Bot className="h-12 w-12 text-muted-foreground mb-4" />}
-            <p className="text-lg font-medium">No agents yet</p>
-            <p className="text-muted-foreground text-sm mb-4">
-              {isV8 ? "Create your first V8 voice agent" : "Create your first AI voice agent to get started"}
-            </p>
-            <Link href={isV8 ? "/agents/new-v8" : "/agents/new"}>
-              <Button><Plus className="h-4 w-4 mr-2" /> Create Agent</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <FadeIn delay={0.15}>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              {isV8 ? <Zap className="h-12 w-12 text-amber-500 mb-4" /> : <Bot className="h-12 w-12 text-muted-foreground mb-4" />}
+              <p className="text-lg font-medium">No agents yet</p>
+              <p className="text-muted-foreground text-sm mb-4">
+                {isV8 ? "Create your first V8 voice agent" : "Create your first AI voice agent to get started"}
+              </p>
+              <Link href={isV8 ? "/agents/new-v8" : "/agents/new"}>
+                <Button><Plus className="h-4 w-4 mr-2" /> Create Agent</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </FadeIn>
       ) : isV8 ? (
         /* V8 agents grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {agents.map((agent: any) => {
             const agentId = agent.agent_id || agent.id;
             const agentName = agent.agent_config?.agent_name || agent.agent_name || agent.name || "Unnamed";
             return (
-              <Link key={agentId} href={`/agents/v8/${agentId}`}>
-                <Card className="hover:border-amber-500/30 transition-colors cursor-pointer h-full">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                          <Zap className="h-5 w-5 text-amber-500" />
+              <StaggerItem key={agentId}>
+                <HoverScale>
+                  <Link href={`/agents/v8/${agentId}`}>
+                    <Card className="hover:border-amber-500/30 transition-colors cursor-pointer h-full">
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                              <Zap className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <div>
+                              <p className="font-semibold">{agentName}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{agentId?.slice(0, 12)}...</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => handleDeleteV8(agentId, e)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div>
-                          <p className="font-semibold">{agentName}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{agentId?.slice(0, 12)}...</p>
+                        {agent.agent_config?.agent_welcome_message && (
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{agent.agent_config.agent_welcome_message}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-500/30">
+                            <Zap className="h-3 w-3" /> V8
+                          </Badge>
                         </div>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => handleDeleteV8(agentId, e)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {agent.agent_config?.agent_welcome_message && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{agent.agent_config.agent_welcome_message}</p>
-                    )}
-                    <div className="flex flex-wrap gap-1.5">
-                      <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-500/30">
-                        <Zap className="h-3 w-3" /> V8
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </HoverScale>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       ) : (
         /* Custom agents grid (original) */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {agents.map((agent: any) => (
-            <Link key={agent.id} href={`/agents/${agent.id}`}>
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-primary" />
+            <StaggerItem key={agent.id}>
+              <HoverScale>
+                <Link href={`/agents/${agent.id}`}>
+                  <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Bot className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">{agent.name}</p>
+                            <p className="text-xs text-muted-foreground">{agent.language}</p>
+                          </div>
+                        </div>
+                        <Badge variant={agent.is_active ? "success" : "secondary"}>
+                          {agent.is_active ? "Active" : "Inactive"}
+                        </Badge>
                       </div>
-                      <div>
-                        <p className="font-semibold">{agent.name}</p>
-                        <p className="text-xs text-muted-foreground">{agent.language}</p>
+
+                      {agent.description && (
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{agent.description}</p>
+                      )}
+
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <Cpu className="h-3 w-3" /> {agent.llm_model}
+                        </Badge>
                       </div>
-                    </div>
-                    <Badge variant={agent.is_active ? "success" : "secondary"}>
-                      {agent.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
 
-                  {agent.description && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{agent.description}</p>
-                  )}
-
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    <Badge variant="outline" className="text-xs gap-1">
-                      <Cpu className="h-3 w-3" /> {agent.llm_model}
-                    </Badge>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">Created {formatDate(agent.created_at)}</p>
-                </CardContent>
-              </Card>
-            </Link>
+                      <p className="text-xs text-muted-foreground">Created {formatDate(agent.created_at)}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </HoverScale>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
-    </div>
+    </PageTransition>
   );
 }

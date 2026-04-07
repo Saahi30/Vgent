@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Boolean, Integer, Text, DateTime
+from sqlalchemy import String, Boolean, Integer, Float, Text, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
@@ -17,6 +17,12 @@ class Tenant(Base):
     max_agents: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     max_concurrent_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     monthly_call_minutes_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    monthly_spend_limit_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    allocated_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    allocated_dollars: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    used_minutes: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    used_dollars: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    spending_limit_action: Mapped[str] = mapped_column(String(10), nullable=False, default="pause")
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

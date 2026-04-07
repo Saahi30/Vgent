@@ -10,6 +10,8 @@ import {
   Activity, LayoutDashboard, Shield, ChevronLeft, Zap, LogOut,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { motion, AnimatePresence } from "@/components/motion";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -30,6 +32,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const { mode, setMode } = useModeStore();
+  const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
   const isV8 = mode === "v8";
@@ -43,17 +46,28 @@ export function Sidebar() {
     >
       {/* Logo — Carbon masthead style */}
       <div className="flex h-12 items-center justify-between px-4 border-b border-border">
-        {sidebarOpen && (
-          <Link href="/" className="text-body-long-01 font-semibold tracking-tight text-foreground">
-            Vgent
-          </Link>
-        )}
-        <button
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Link href="/" className="text-body-long-01 font-semibold tracking-tight text-foreground">
+                Vgent
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.button
           onClick={toggleSidebar}
           className="p-2 text-muted-foreground hover:text-foreground hover:bg-layer-hover transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
-        </button>
+        </motion.button>
       </div>
 
       {/* Mode Toggle — Carbon toggle style */}
@@ -93,58 +107,89 @@ export function Sidebar() {
 
       {/* Navigation — Carbon side-nav pattern */}
       <nav className="flex flex-col mt-4 flex-1">
-        {navItems.map((item: any) => {
+        {navItems.map((item: any, i: number) => {
           const prefix = item.matchPrefix || item.href;
           const isActive = pathname === item.href || (prefix !== "/" && pathname.startsWith(prefix));
           return (
-            <Link
+            <motion.div
               key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
-                isActive
-                  ? "border-l-primary bg-layer-01 text-primary font-medium"
-                  : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
-              )}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.04 }}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {sidebarOpen && <span>{item.label}</span>}
-            </Link>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
+                  isActive
+                    ? "border-l-primary bg-layer-01 text-primary font-medium"
+                    : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                <AnimatePresence>
+                  {sidebarOpen && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "auto" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Link>
+            </motion.div>
           );
         })}
 
-        {/* Admin divider */}
-        <div className="my-2 mx-4 border-t border-border" />
-        {adminItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
-                isActive
-                  ? "border-l-primary bg-layer-01 text-primary font-medium"
-                  : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {sidebarOpen && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+        {/* Admin divider — only show for superadmin */}
+        {user?.role === "superadmin" && (
+          <>
+            <div className="my-2 mx-4 border-t border-border" />
+            {adminItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 text-body-short-01 transition-colors border-l-2",
+                    isActive
+                      ? "border-l-primary bg-layer-01 text-primary font-medium"
+                      : "border-l-transparent text-muted-foreground hover:bg-layer-hover hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {sidebarOpen && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       {/* Bottom section */}
       <div className="border-t border-border">
-        {sidebarOpen && isV8 && (
-          <div className="px-3 pt-3">
-            <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 text-caption-01 text-primary">
-              <Zap className="h-3.5 w-3.5" />
-              <span>V8 Mode Active</span>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {sidebarOpen && isV8 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="px-3 pt-3 overflow-hidden"
+            >
+              <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 text-caption-01 text-primary">
+                <Zap className="h-3.5 w-3.5" />
+                <span>V8 Mode Active</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <ThemeToggle collapsed={!sidebarOpen} />
         <button
           onClick={logout}
           className="flex items-center gap-3 w-full px-4 py-3 text-body-short-01 text-muted-foreground hover:bg-layer-hover hover:text-foreground transition-colors"

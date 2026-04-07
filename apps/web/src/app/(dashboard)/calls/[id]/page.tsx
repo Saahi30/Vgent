@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Clock, User, Bot, Activity } from "lucide-react";
+import { ArrowLeft, Phone, Clock, User, Bot, Activity, Sparkles, RefreshCw, Mic } from "lucide-react";
 import { formatDate, formatDuration } from "@/lib/utils";
 
 export default function CallDetailPage() {
@@ -17,6 +17,7 @@ export default function CallDetailPage() {
   const [call, setCall] = useState<any>(null);
   const [turns, setTurns] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
     api.calls.get(id).then((res) => {
@@ -33,6 +34,28 @@ export default function CallDetailPage() {
       case "failed": return "destructive";
       case "in_progress": return "warning";
       default: return "secondary";
+    }
+  };
+
+  const sentimentColor = (label: string | null) => {
+    switch (label) {
+      case "positive": return "text-green-600 bg-green-50 border-green-200";
+      case "negative": return "text-red-600 bg-red-50 border-red-200";
+      case "mixed": return "text-amber-600 bg-amber-50 border-amber-200";
+      default: return "text-slate-600 bg-slate-50 border-slate-200";
+    }
+  };
+
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    try {
+      const res = await api.calls.analyze(id);
+      const updated = res.data;
+      setCall(updated);
+    } catch {
+      // silently fail — endpoint returns 422 if no transcript
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -95,6 +118,85 @@ export default function CallDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Recording Playback */}
+      {call.recording_url && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Mic className="h-4 w-4" /> Recording
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <audio controls className="w-full" preload="metadata" src={call.recording_url}>
+              Your browser does not support the audio element.
+            </audio>
+            {call.recording_duration_seconds && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Duration: {formatDuration(call.recording_duration_seconds)}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Recording must be enabled by an admin for new calls.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary & Sentiment */}
+      {call.status === "completed" && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-4 w-4" /> Summary & Sentiment
+              </CardTitle>
+              {!call.summary && turns.length > 0 && (
+                <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={analyzing}>
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${analyzing ? "animate-spin" : ""}`} />
+                  {analyzing ? "Analyzing..." : "Generate Analysis"}
+                </Button>
+              )}
+              {call.summary && (
+                <Button variant="ghost" size="sm" onClick={handleAnalyze} disabled={analyzing}>
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${analyzing ? "animate-spin" : ""}`} />
+                  {analyzing ? "Re-analyzing..." : "Re-analyze"}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {call.summary ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Summary</p>
+                  <p className="text-sm leading-relaxed">{call.summary}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Sentiment</p>
+                    <Badge className={`capitalize ${sentimentColor(call.sentiment_label)}`}>
+                      {call.sentiment_label || "unknown"}
+                    </Badge>
+                  </div>
+                  {call.sentiment_score !== null && call.sentiment_score !== undefined && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Score</p>
+                      <span className="text-sm font-mono">{call.sentiment_score.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                {turns.length === 0
+                  ? "No transcript available for analysis."
+                  : "Analysis not yet generated. Click 'Generate Analysis' to run."}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Transcript */}
       <Card>

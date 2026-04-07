@@ -23,8 +23,12 @@ celery.conf.update(
             "task": "app.tasks.campaign_tasks.scan_active_campaigns",
             "schedule": 60.0,  # Every 60 seconds
         },
+        "scan-callbacks": {
+            "task": "app.tasks.callback_tasks.scan_due_callbacks",
+            "schedule": 60.0,  # Every 60 seconds
+        },
     },
 )
 
 # Auto-discover tasks
-celery.autodiscover_tasks(["app.tasks", "app.tasks.kb_tasks"])
+celery.autodiscover_tasks(["app.tasks", "app.tasks.kb_tasks", "app.tasks.call_analysis_tasks", "app.tasks.callback_tasks"])

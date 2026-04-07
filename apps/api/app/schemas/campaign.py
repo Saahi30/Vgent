@@ -52,6 +52,8 @@ class CampaignResponse(BaseModel):
     total_contacts: int
     completed_calls: int
     failed_calls: int
+    bolna_batch_id: str | None = None
+    bolna_batch_status: str | None = None
     metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime

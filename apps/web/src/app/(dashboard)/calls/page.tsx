@@ -11,6 +11,7 @@ import { Phone, ChevronLeft, ChevronRight, Zap, Square } from "lucide-react";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { useModeStore } from "@/store/mode";
 import { toast } from "sonner";
+import { PageTransition, FadeIn, motion } from "@/components/motion";
 
 const STATUS_OPTIONS = ["all", "initiated", "ringing", "in_progress", "completed", "failed", "busy", "no_answer"];
 
@@ -109,22 +110,24 @@ export default function CallsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            Calls
-            {isV8 && <Badge variant="outline" className="text-amber-600 border-amber-500/30 gap-1"><Zap className="h-3 w-3" /> V8</Badge>}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isV8 ? "Make calls and view executions via V8" : "View and manage call history"}
-          </p>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Calls
+              {isV8 && <Badge variant="outline" className="text-amber-600 border-amber-500/30 gap-1"><Zap className="h-3 w-3" /> V8</Badge>}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {isV8 ? "Make calls and view executions via V8" : "View and manage call history"}
+            </p>
+          </div>
         </div>
-      </div>
+      </FadeIn>
 
       {/* V8: Quick Call Widget */}
       {isV8 && (
-        <Card>
+        <FadeIn delay={0.1}><Card>
           <CardContent className="p-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-48">
@@ -152,7 +155,7 @@ export default function CallsPage() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card></FadeIn>
       )}
 
       {/* Filters (custom mode only) */}
@@ -201,11 +204,17 @@ export default function CallsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {calls.map((exec: any) => {
+                  {calls.map((exec: any, i: number) => {
                     const execId = exec.execution_id || exec.id;
                     const status = exec.status || exec.call_status || "unknown";
                     return (
-                      <tr key={execId} className="border-b border-border hover:bg-accent/50 transition-colors">
+                      <motion.tr
+                        key={execId}
+                        className="border-b border-border hover:bg-accent/50 transition-colors"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.25, delay: i * 0.03 }}
+                      >
                         <td className="p-4 font-mono text-xs">{execId?.slice(0, 20)}...</td>
                         <td className="p-4">
                           <Badge variant={statusVariant(status) as any}>{status}</Badge>
@@ -220,7 +229,7 @@ export default function CallsPage() {
                             </Button>
                           )}
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })}
                 </tbody>
@@ -240,11 +249,14 @@ export default function CallsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {calls.map((call: any) => (
-                    <tr
+                  {calls.map((call: any, i: number) => (
+                    <motion.tr
                       key={call.id}
                       onClick={() => router.push(`/calls/${call.id}`)}
                       className="border-b border-border hover:bg-accent cursor-pointer transition-colors"
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.25, delay: i * 0.03 }}
                     >
                       <td className="p-4 font-medium">{call.to_number}</td>
                       <td className="p-4">
@@ -255,7 +267,7 @@ export default function CallsPage() {
                       </td>
                       <td className="p-4 text-muted-foreground">{call.agent_name || call.agent_id?.slice(0, 8) || "--"}</td>
                       <td className="p-4 text-muted-foreground">{formatDate(call.created_at)}</td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -266,16 +278,18 @@ export default function CallsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <FadeIn delay={0.2}>
+          <div className="flex items-center justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </FadeIn>
       )}
-    </div>
+    </PageTransition>
   );
 }

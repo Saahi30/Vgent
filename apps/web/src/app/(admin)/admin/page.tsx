@@ -7,6 +7,7 @@ import { StatsCard } from "@/components/shared/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Building2,
   Phone,
@@ -16,18 +17,21 @@ import {
   Database,
   Server,
   Activity,
+  DollarSign,
 } from "lucide-react";
 
 export default function AdminOverviewPage() {
   const [usage, setUsage] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
+  const [tenantsUsage, setTenantsUsage] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.admin.usage(), api.admin.health()])
-      .then(([u, h]) => {
+    Promise.all([api.admin.usage(), api.admin.health(), api.admin.allTenantsUsage()])
+      .then(([u, h, tu]) => {
         setUsage(u.data);
         setHealth(h.data);
+        setTenantsUsage(tu.data || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -98,13 +102,13 @@ export default function AdminOverviewPage() {
                 <div className="flex items-center gap-2">
                   <div
                     className={`h-3 w-3 rounded-full ${
-                      health.db === "ok" || health.database === "ok"
+                      health.database === "ok"
                         ? "bg-success"
                         : "bg-destructive"
                     }`}
                   />
                   <span className="text-sm font-medium">
-                    {health.db === "ok" || health.database === "ok"
+                    {health.database === "ok"
                       ? "Healthy"
                       : "Unhealthy"}
                   </span>
@@ -137,6 +141,75 @@ export default function AdminOverviewPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Tenant Spending Overview */}
+      {tenantsUsage.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <DollarSign className="h-5 w-5" /> Tenant Spending Overview
+            </CardTitle>
+            <Link href="/admin/tenants">
+              <Button variant="ghost" size="sm">
+                Manage <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left p-4 font-medium text-muted-foreground">Tenant</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Plan</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Minutes Used</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Dollars Spent</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Limit Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tenantsUsage.map((t: any) => (
+                    <tr key={t.id} className="border-b border-border hover:bg-accent transition-colors">
+                      <td className="p-4 font-medium">
+                        <Link href={`/admin/tenants/${t.id}`} className="text-primary hover:underline">
+                          {t.name}
+                        </Link>
+                      </td>
+                      <td className="p-4">
+                        <Badge variant="outline">{t.plan}</Badge>
+                      </td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          <span>{t.used_minutes} / {t.minutes_limit || "unlimited"}</span>
+                          {t.minutes_limit > 0 && (
+                            <Progress value={t.percent_minutes} className="h-1.5" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          <span>${t.used_dollars} / {t.dollars_limit > 0 ? `$${t.dollars_limit}` : "unlimited"}</span>
+                          {t.dollars_limit > 0 && (
+                            <Progress value={t.percent_dollars} className="h-1.5" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Badge variant={
+                          t.percent_minutes >= 90 || t.percent_dollars >= 90 ? "destructive" :
+                          t.percent_minutes >= 70 || t.percent_dollars >= 70 ? "warning" : "secondary"
+                        }>
+                          {t.spending_limit_action}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

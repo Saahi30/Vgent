@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { motion } from "@/components/motion";
 
 interface StatsCardProps {
   title: string;
@@ -14,7 +15,10 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, subtitle, icon: Icon, trend, className }: StatsCardProps) {
   return (
-    <div className={cn("bg-layer-01 p-4 hover:bg-layer-hover transition-colors", className)}>
+    <motion.div
+      className={cn("bg-layer-01 p-4 hover:bg-layer-hover transition-colors", className)}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-caption-01 text-muted-foreground">{title}</p>
@@ -26,10 +30,13 @@ export function StatsCard({ title, value, subtitle, icon: Icon, trend, className
             </p>
           )}
         </div>
-        <div className="h-10 w-10 flex items-center justify-center bg-layer-02">
+        <motion.div
+          className="h-10 w-10 flex items-center justify-center bg-layer-02"
+          whileHover={{ scale: 1.1, rotate: 5, transition: { duration: 0.2 } }}
+        >
           <Icon className="h-5 w-5 text-primary" />
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

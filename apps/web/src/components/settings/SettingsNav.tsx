@@ -8,6 +8,7 @@ const SETTINGS_TABS = [
   { href: "/settings/providers", label: "Providers" },
   { href: "/settings/v8", label: "V8" },
   { href: "/settings/usage", label: "Usage" },
+  { href: "/settings/billing", label: "Billing" },
   { href: "/settings/team", label: "Team" },
 ];
 

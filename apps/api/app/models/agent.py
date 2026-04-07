@@ -59,6 +59,10 @@ class Agent(Base):
     knowledge_base_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     knowledge_base_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("knowledge_bases.id", ondelete="SET NULL"))
 
+    # Bolna integration
+    bolna_agent_id: Mapped[str | None] = mapped_column(Text)
+    bolna_agent_config: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
     # Webhooks
     webhook_url: Mapped[str | None] = mapped_column(Text)
     webhook_events: Mapped[list[str] | None] = mapped_column(ARRAY(Text))

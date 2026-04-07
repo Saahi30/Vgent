@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Plus, Search, Upload, Users, X, Pencil, Trash2, PhoneOff, Phone } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { PageTransition, FadeIn, motion, AnimatePresence } from "@/components/motion";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
@@ -118,12 +119,13 @@ export default function ContactsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Contacts</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your contact list</p>
-        </div>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Contacts</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage your contact list</p>
+          </div>
         <div className="flex gap-2">
           <Link href="/contacts/import">
             <Button variant="outline"><Upload className="h-4 w-4 mr-2" /> Import CSV</Button>
@@ -133,6 +135,7 @@ export default function ContactsPage() {
           </Button>
         </div>
       </div>
+      </FadeIn>
 
       {/* Search */}
       <div className="relative max-w-sm">
@@ -146,7 +149,15 @@ export default function ContactsPage() {
       </div>
 
       {/* Inline Add/Edit Form */}
+      <AnimatePresence>
       {showForm && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.25 }}
+          className="overflow-hidden"
+        >
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
@@ -195,7 +206,9 @@ export default function ContactsPage() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Table */}
       <Card>
@@ -231,8 +244,14 @@ export default function ContactsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {contacts.map((contact: any) => (
-                    <tr key={contact.id} className="border-b border-border hover:bg-accent transition-colors">
+                  {contacts.map((contact: any, i: number) => (
+                    <motion.tr
+                      key={contact.id}
+                      className="border-b border-border hover:bg-accent transition-colors"
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.25, delay: i * 0.03 }}
+                    >
                       <td className="p-4 font-medium">
                         {contact.first_name} {contact.last_name}
                       </td>
@@ -281,7 +300,7 @@ export default function ContactsPage() {
                           </Button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -308,6 +327,6 @@ export default function ContactsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageTransition>
   );
 }

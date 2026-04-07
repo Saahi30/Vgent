@@ -26,6 +26,8 @@ class Campaign(Base):
     total_contacts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     completed_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     failed_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    bolna_batch_id: Mapped[str | None] = mapped_column(Text)
+    bolna_batch_status: Mapped[str | None] = mapped_column(String(20))
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

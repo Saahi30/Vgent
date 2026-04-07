@@ -8,19 +8,72 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 type ApiResponse<T> = { data: T | null; error: { code: string; message: string } | null };
 type PaginatedResponse<T> = { data: T[]; total: number; page: number; page_size: number; total_pages: number; error: null };
 
+// In-memory JWT token cache
+let _cachedToken: string | null = null;
+
+async function getToken(): Promise<string | null> {
+  if (_cachedToken) return _cachedToken;
+  // Try localStorage first (set during login)
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("vgent_token");
+    if (stored) {
+      _cachedToken = stored;
+      return stored;
+    }
+  }
+  // Fallback: fetch from server-side cookie via API route
+  try {
+    const res = await fetch("/api/auth/token");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        _cachedToken = data.token;
+        return data.token;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+export function setToken(token: string | null) {
+  _cachedToken = token;
+  if (typeof window !== "undefined") {
+    if (token) {
+      localStorage.setItem("vgent_token", token);
+    } else {
+      localStorage.removeItem("vgent_token");
+    }
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
+    const token = await getToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${API_URL}/api${path}`, {
       ...options,
       signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
     });
+
+    if (res.status === 401) {
+      // Token expired — clear and redirect to login
+      setToken(null);
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired");
+    }
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -39,6 +92,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+
+  // Auth
+  auth: {
+    me: () => request<ApiResponse<any>>("/auth/me"),
+  },
 
   // Tenants
   tenants: {
@@ -145,10 +203,21 @@ export const api = {
     },
     get: (id: string) => request<ApiResponse<any>>(`/calls/${id}`),
     active: () => request<ApiResponse<any[]>>("/calls/active"),
+    analytics: (days?: number) => request<ApiResponse<any>>(`/calls/analytics${days ? `?days=${days}` : ""}`),
     initiate: (data: { agent_id: string; to_number: string; contact_id?: string; campaign_id?: string }) =>
       request<ApiResponse<any>>("/calls/initiate", { method: "POST", body: JSON.stringify(data) }),
     testCall: (data: { agent_id: string }) =>
       request<ApiResponse<any>>("/calls/test-call", { method: "POST", body: JSON.stringify({ ...data, to_number: "webrtc-test" }) }),
+    analyze: (id: string) =>
+      request<ApiResponse<any>>(`/calls/${id}/analyze`, { method: "POST" }),
+    exportCsv: (params?: { status?: string; agent_id?: string; campaign_id?: string; outcome?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.status) qs.set("status", params.status);
+      if (params?.agent_id) qs.set("agent_id", params.agent_id);
+      if (params?.campaign_id) qs.set("campaign_id", params.campaign_id);
+      if (params?.outcome) qs.set("outcome", params.outcome);
+      return `${API_URL}/api/calls/export/csv?${qs}`;
+    },
   },
 
   // Providers
@@ -196,9 +265,24 @@ export const api = {
       const qs = params?.page ? `?page=${params.page}` : "";
       return request<PaginatedResponse<any>>(`/admin/tenants${qs}`);
     },
+    createTenant: (data: {
+      name: string; slug: string; plan: string;
+      max_agents: number; max_concurrent_calls: number; monthly_call_minutes_limit: number;
+      owner_email: string; owner_password: string; owner_name: string;
+    }) => request<ApiResponse<any>>("/admin/tenants", { method: "POST", body: JSON.stringify(data) }),
     tenant: (id: string) => request<ApiResponse<any>>(`/admin/tenants/${id}`),
     updateTenant: (id: string, data: any) => request<ApiResponse<any>>(`/admin/tenants/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     suspendTenant: (id: string) => request<ApiResponse<any>>(`/admin/tenants/${id}/suspend`, { method: "POST" }),
+    allocateBalance: (id: string, data: { minutes_delta: number; dollars_delta: number; note?: string }) =>
+      request<ApiResponse<any>>(`/admin/tenants/${id}/allocate`, { method: "POST", body: JSON.stringify(data) }),
+    resetUsage: (id: string, data?: { note?: string }) =>
+      request<ApiResponse<any>>(`/admin/tenants/${id}/reset-usage`, { method: "POST", body: JSON.stringify(data || {}) }),
+    tenantSpending: (id: string, params?: { page?: number }) => {
+      const qs = params?.page ? `?page=${params.page}` : "";
+      return request<ApiResponse<any>>(`/admin/tenants/${id}/spending${qs}`);
+    },
+    tenantUsageDetail: (id: string) => request<ApiResponse<any>>(`/admin/tenants/${id}/usage-detail`),
+    allTenantsUsage: () => request<ApiResponse<any>>("/admin/usage/all-tenants"),
     calls: (params?: { page?: number; tenant_id?: string }) => {
       const qs = new URLSearchParams();
       if (params?.page) qs.set("page", String(params.page));
@@ -210,6 +294,16 @@ export const api = {
   },
 
   health: () => request<any>("/health"),
+
+  // Billing (mock payment)
+  billing: {
+    packs: () => request<ApiResponse<any[]>>("/billing/packs"),
+    createOrder: (data: { pack_id: string; payment_method: "card" | "upi" }) =>
+      request<ApiResponse<any>>("/billing/create-order", { method: "POST", body: JSON.stringify(data) }),
+    verifyPayment: (data: { order_id: string; card_last4?: string; upi_id?: string }) =>
+      request<ApiResponse<any>>("/billing/verify-payment", { method: "POST", body: JSON.stringify(data) }),
+    history: () => request<ApiResponse<any[]>>("/billing/history"),
+  },
 
   // ── Bolna Mode ──────────────────────────────────────────────
   bolna: {

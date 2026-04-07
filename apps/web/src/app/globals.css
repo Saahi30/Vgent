@@ -3,42 +3,31 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* IBM Carbon Gray 100 Dark Theme */
+  /* ── Dark (default) ── IBM Carbon Gray 100 ── */
+  :root,
+  [data-theme="dark"] {
     --background: 0 0% 9%;
     --foreground: 0 0% 96%;
     --card: 0 0% 15%;
     --card-foreground: 0 0% 96%;
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 96%;
-    /* IBM Blue 40 for dark theme interactive */
     --primary: 216 84% 74%;
     --primary-foreground: 0 0% 9%;
-    /* Gray 90 */
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 96%;
-    /* Gray 80 */
     --muted: 0 0% 24%;
     --muted-foreground: 0 0% 78%;
-    /* Gray 80 */
     --accent: 0 0% 22%;
     --accent-foreground: 0 0% 96%;
-    /* Red 50 */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
-    /* Gray 80 */
     --border: 0 0% 22%;
-    /* Gray 70 */
     --input: 0 0% 22%;
-    /* IBM Blue 40 */
     --ring: 216 84% 74%;
-    /* 0px - Carbon signature */
     --radius: 0px;
-    /* Status */
     --success: 142 64% 36%;
     --warning: 45 86% 56%;
-
-    /* Carbon-specific tokens */
     --cds-layer-01: 0 0% 15%;
     --cds-layer-02: 0 0% 22%;
     --cds-layer-hover: 0 0% 28%;
@@ -48,6 +37,187 @@
     --cds-focus: 216 84% 74%;
     --cds-interactive: 216 84% 74%;
     --cds-overlay: 0 0% 0%;
+    color-scheme: dark;
+  }
+
+  /* ── Light ── IBM Carbon White theme ── */
+  [data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 216 84% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 44%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 216 84% 44%;
+    --radius: 0px;
+    --success: 142 64% 36%;
+    --warning: 45 86% 56%;
+    --cds-layer-01: 0 0% 96%;
+    --cds-layer-02: 0 0% 92%;
+    --cds-layer-hover: 0 0% 88%;
+    --cds-text-secondary: 0 0% 44%;
+    --cds-text-placeholder: 0 0% 64%;
+    --cds-border-subtle: 0 0% 88%;
+    --cds-focus: 216 84% 44%;
+    --cds-interactive: 216 84% 44%;
+    --cds-overlay: 0 0% 0%;
+    color-scheme: light;
+  }
+
+  /* ── Cyberpunk ── Neon-on-black ── */
+  [data-theme="cyberpunk"] {
+    --background: 270 20% 6%;
+    --foreground: 300 10% 92%;
+    --card: 270 20% 10%;
+    --card-foreground: 300 10% 92%;
+    --popover: 270 20% 10%;
+    --popover-foreground: 300 10% 92%;
+    --primary: 320 100% 60%;
+    --primary-foreground: 270 20% 6%;
+    --secondary: 270 20% 14%;
+    --secondary-foreground: 300 10% 92%;
+    --muted: 270 15% 20%;
+    --muted-foreground: 300 10% 70%;
+    --accent: 180 100% 45%;
+    --accent-foreground: 270 20% 6%;
+    --destructive: 0 90% 55%;
+    --destructive-foreground: 300 10% 92%;
+    --border: 270 20% 18%;
+    --input: 270 20% 18%;
+    --ring: 320 100% 60%;
+    --radius: 0px;
+    --success: 160 100% 42%;
+    --warning: 50 100% 55%;
+    --cds-layer-01: 270 20% 10%;
+    --cds-layer-02: 270 20% 14%;
+    --cds-layer-hover: 270 20% 22%;
+    --cds-text-secondary: 300 10% 70%;
+    --cds-text-placeholder: 270 15% 40%;
+    --cds-border-subtle: 270 20% 18%;
+    --cds-focus: 320 100% 60%;
+    --cds-interactive: 320 100% 60%;
+    --cds-overlay: 270 50% 4%;
+    color-scheme: dark;
+  }
+
+  /* ── Ocean ── Deep sea blues ── */
+  [data-theme="ocean"] {
+    --background: 210 50% 8%;
+    --foreground: 200 20% 92%;
+    --card: 210 45% 13%;
+    --card-foreground: 200 20% 92%;
+    --popover: 210 45% 13%;
+    --popover-foreground: 200 20% 92%;
+    --primary: 195 90% 55%;
+    --primary-foreground: 210 50% 8%;
+    --secondary: 210 40% 16%;
+    --secondary-foreground: 200 20% 92%;
+    --muted: 210 35% 22%;
+    --muted-foreground: 200 20% 72%;
+    --accent: 175 60% 40%;
+    --accent-foreground: 200 20% 92%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 200 20% 92%;
+    --border: 210 35% 20%;
+    --input: 210 35% 20%;
+    --ring: 195 90% 55%;
+    --radius: 0px;
+    --success: 160 70% 40%;
+    --warning: 45 86% 56%;
+    --cds-layer-01: 210 45% 13%;
+    --cds-layer-02: 210 40% 18%;
+    --cds-layer-hover: 210 35% 26%;
+    --cds-text-secondary: 200 20% 72%;
+    --cds-text-placeholder: 210 25% 42%;
+    --cds-border-subtle: 210 35% 20%;
+    --cds-focus: 195 90% 55%;
+    --cds-interactive: 195 90% 55%;
+    --cds-overlay: 210 60% 4%;
+    color-scheme: dark;
+  }
+
+  /* ── Forest ── Earthy greens ── */
+  [data-theme="forest"] {
+    --background: 150 20% 7%;
+    --foreground: 80 10% 92%;
+    --card: 150 18% 12%;
+    --card-foreground: 80 10% 92%;
+    --popover: 150 18% 12%;
+    --popover-foreground: 80 10% 92%;
+    --primary: 140 60% 50%;
+    --primary-foreground: 150 20% 7%;
+    --secondary: 150 15% 16%;
+    --secondary-foreground: 80 10% 92%;
+    --muted: 150 12% 22%;
+    --muted-foreground: 80 10% 70%;
+    --accent: 90 40% 40%;
+    --accent-foreground: 80 10% 92%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 80 10% 92%;
+    --border: 150 15% 18%;
+    --input: 150 15% 18%;
+    --ring: 140 60% 50%;
+    --radius: 0px;
+    --success: 142 64% 36%;
+    --warning: 45 86% 56%;
+    --cds-layer-01: 150 18% 12%;
+    --cds-layer-02: 150 15% 17%;
+    --cds-layer-hover: 150 12% 24%;
+    --cds-text-secondary: 80 10% 70%;
+    --cds-text-placeholder: 150 10% 40%;
+    --cds-border-subtle: 150 15% 18%;
+    --cds-focus: 140 60% 50%;
+    --cds-interactive: 140 60% 50%;
+    --cds-overlay: 150 30% 3%;
+    color-scheme: dark;
+  }
+
+  /* ── Sunset ── Warm amber / rose ── */
+  [data-theme="sunset"] {
+    --background: 20 25% 8%;
+    --foreground: 30 15% 92%;
+    --card: 20 22% 13%;
+    --card-foreground: 30 15% 92%;
+    --popover: 20 22% 13%;
+    --popover-foreground: 30 15% 92%;
+    --primary: 25 95% 58%;
+    --primary-foreground: 20 25% 8%;
+    --secondary: 20 20% 16%;
+    --secondary-foreground: 30 15% 92%;
+    --muted: 20 18% 22%;
+    --muted-foreground: 30 15% 70%;
+    --accent: 340 60% 50%;
+    --accent-foreground: 30 15% 92%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 30 15% 92%;
+    --border: 20 18% 20%;
+    --input: 20 18% 20%;
+    --ring: 25 95% 58%;
+    --radius: 0px;
+    --success: 142 64% 36%;
+    --warning: 45 86% 56%;
+    --cds-layer-01: 20 22% 13%;
+    --cds-layer-02: 20 20% 18%;
+    --cds-layer-hover: 20 18% 26%;
+    --cds-text-secondary: 30 15% 70%;
+    --cds-text-placeholder: 20 15% 42%;
+    --cds-border-subtle: 20 18% 20%;
+    --cds-focus: 25 95% 58%;
+    --cds-interactive: 25 95% 58%;
+    --cds-overlay: 20 40% 4%;
+    color-scheme: dark;
   }
 }
 
@@ -69,14 +239,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(0 0% 9%);
+  background: hsl(var(--background));
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(0 0% 28%);
+  background: hsl(var(--cds-layer-hover));
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(0 0% 40%);
+  background: hsl(var(--muted-foreground));
 }
 
 /* Carbon focus ring utility */
@@ -84,5 +254,59 @@
   .carbon-focus {
     @apply outline-none ring-2 ring-ring ring-offset-0;
     box-shadow: inset 0 0 0 1px hsl(var(--ring)), inset 0 0 0 2px hsl(var(--background));
+  }
+}
+
+/* ── Custom animations ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--cds-layer-01)) 25%,
+      hsl(var(--cds-layer-02)) 50%,
+      hsl(var(--cds-layer-01)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.35s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.3s ease-out forwards;
+  }
+
+  .animate-progress-fill {
+    animation: progress-fill 0.8s ease-out forwards;
   }
 }

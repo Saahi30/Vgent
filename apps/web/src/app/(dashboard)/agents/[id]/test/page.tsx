@@ -26,7 +26,7 @@ type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected";
 export default function AgentTestPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { token: authToken } = useAuthStore();
+  const authToken = typeof window !== "undefined" ? localStorage.getItem("vgent_token") : null;
   const [status, setStatus] = useState<ConnectionStatus>("idle");
   const [muted, setMuted] = useState(false);
   const [callId, setCallId] = useState<string | null>(null);

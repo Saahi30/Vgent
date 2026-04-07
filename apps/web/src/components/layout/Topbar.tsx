@@ -5,6 +5,7 @@ import { useModeStore } from "@/store/mode";
 import { Menu, Wallet, Clock, TrendingDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { motion, AnimatePresence } from "@/components/motion";
 
 interface UsageData {
   minutes_used: number;
@@ -75,19 +76,32 @@ function CostCounter() {
     : null;
 
   return (
-    <div className="flex items-center gap-4">
+    <motion.div
+      className="flex items-center gap-4"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.2 }}
+    >
       {/* Bolna Wallet Balance (V8 mode) */}
-      {mode === "v8" && bolnaBalance && (
-        <div className="flex items-center gap-3 bg-primary/8 px-4 py-2">
-          <Wallet className="h-4 w-4 text-primary" />
-          <div className="flex flex-col">
-            <span className="text-caption-01 text-muted-foreground">Balance</span>
-            <span className="text-body-short-01 font-semibold text-primary">
-              ${bolnaBalance.balance.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mode === "v8" && bolnaBalance && (
+          <motion.div
+            className="flex items-center gap-3 bg-primary/8 px-4 py-2"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Wallet className="h-4 w-4 text-primary" />
+            <div className="flex flex-col">
+              <span className="text-caption-01 text-muted-foreground">Balance</span>
+              <span className="text-body-short-01 font-semibold text-primary">
+                ${bolnaBalance.balance.toFixed(2)}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Minutes Used */}
       {usage && (
@@ -113,7 +127,7 @@ function CostCounter() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

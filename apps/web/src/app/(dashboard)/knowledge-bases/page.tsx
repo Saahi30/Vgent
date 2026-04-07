@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, FileText } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { PageTransition, FadeIn, StaggerContainer, StaggerItem, HoverScale } from "@/components/motion";
 
 export default function KnowledgeBasesPage() {
   const [kbs, setKbs] = useState<any[]>([]);
@@ -65,19 +66,21 @@ export default function KnowledgeBasesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Knowledge Bases</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upload documents for your AI agents to reference during calls</p>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Knowledge Bases</h1>
+            <p className="text-muted-foreground text-sm mt-1">Upload documents for your AI agents to reference during calls</p>
+          </div>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-2" /> New Knowledge Base
+          </Button>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-2" /> New Knowledge Base
-        </Button>
-      </div>
+      </FadeIn>
 
       {kbs.length === 0 ? (
-        <Card>
+        <FadeIn delay={0.15}><Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium">No knowledge bases yet</p>
@@ -86,12 +89,14 @@ export default function KnowledgeBasesPage() {
               <Plus className="h-4 w-4 mr-2" /> New Knowledge Base
             </Button>
           </CardContent>
-        </Card>
+        </Card></FadeIn>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {kbs.map((kb: any) => (
-            <Link key={kb.id} href={`/knowledge-bases/${kb.id}`}>
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+            <StaggerItem key={kb.id}>
+              <HoverScale>
+                <Link href={`/knowledge-bases/${kb.id}`}>
+                  <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 mb-2">
@@ -119,9 +124,11 @@ export default function KnowledgeBasesPage() {
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+                </Link>
+              </HoverScale>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       )}
 
       {/* Create Dialog */}
@@ -162,6 +169,6 @@ export default function KnowledgeBasesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageTransition>
   );
 }

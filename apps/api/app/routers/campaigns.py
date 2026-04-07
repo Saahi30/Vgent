@@ -3,13 +3,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from uuid import UUID
 import math
+import csv
+import io
+import logging
 
 from app.core.database import get_db
 from app.core.auth import get_current_user, CurrentUser
+from app.models.call import Call
 from app.models.campaign import Campaign, CampaignContact
 from app.models.contact import Contact
+from app.models.agent import Agent
 from app.schemas.campaign import CampaignCreate, CampaignUpdate, CampaignResponse, CampaignContactResponse
 from app.schemas.common import ApiResponse, PaginatedResponse
+from app.services.spending_limiter import check_spending_limit
+from app.services import bolna_client
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -153,9 +162,72 @@ async def start_campaign(
     if campaign.status not in ("draft", "scheduled", "paused"):
         raise HTTPException(status_code=400, detail=f"Cannot start campaign in '{campaign.status}' status")
 
+    # ── Spending limit check ──
+    spending = await check_spending_limit(db, user.tenant_id)
+    if not spending.can_proceed:
+        raise HTTPException(status_code=402, detail=spending.warning or "Spending limit exceeded")
+
+    # ── Bolna batch execution (if agent has a bolna_agent_id) ──
+    agent_result = await db.execute(select(Agent).where(Agent.id == campaign.agent_id))
+    agent = agent_result.scalar_one_or_none()
+
+    if agent and agent.bolna_agent_id and not campaign.bolna_batch_id:
+        # Build CSV from campaign contacts
+        contacts_result = await db.execute(
+            select(CampaignContact, Contact).join(
+                Contact, CampaignContact.contact_id == Contact.id
+            ).where(
+                CampaignContact.campaign_id == campaign.id,
+                CampaignContact.status == "pending",
+            )
+        )
+        rows = contacts_result.all()
+
+        if rows:
+            buf = io.StringIO()
+            writer = csv.writer(buf)
+            writer.writerow(["contact_number", "first_name", "last_name"])
+            for cc, contact in rows:
+                writer.writerow([
+                    contact.phone_number,
+                    contact.first_name or "",
+                    contact.last_name or "",
+                ])
+            csv_bytes = buf.getvalue().encode("utf-8")
+
+            try:
+                # Create batch on Bolna
+                batch = await bolna_client.create_batch(
+                    agent_id=agent.bolna_agent_id,
+                    csv_file=csv_bytes,
+                    filename=f"campaign_{campaign.id}.csv",
+                )
+                batch_id = batch.get("batch_id") or batch.get("id")
+                if batch_id:
+                    campaign.bolna_batch_id = str(batch_id)
+                    campaign.bolna_batch_status = "created"
+                    await db.flush()
+
+                    # Schedule it to run immediately
+                    await bolna_client.schedule_batch(batch_id)
+                    campaign.bolna_batch_status = "scheduled"
+            except Exception as e:
+                logger.error(f"Failed to create Bolna batch for campaign {campaign.id}: {e}")
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Failed to start campaign via Bolna: {str(e)}"
+                )
+
     campaign.status = "running"
     await db.flush()
-    return ApiResponse(data=CampaignResponse.model_validate(campaign))
+
+    resp = CampaignResponse.model_validate(campaign)
+    if spending.warning:
+        resp_data = resp.model_dump()
+        resp_data["spending_warning"] = spending.warning
+        return ApiResponse(data=resp_data)
+
+    return ApiResponse(data=resp)
 
 
 @router.post("/{campaign_id}/pause", response_model=ApiResponse[CampaignResponse])
@@ -173,6 +245,14 @@ async def pause_campaign(
 
     if campaign.status != "running":
         raise HTTPException(status_code=400, detail="Can only pause a running campaign")
+
+    # Stop the Bolna batch if it exists
+    if campaign.bolna_batch_id:
+        try:
+            await bolna_client.stop_batch(campaign.bolna_batch_id)
+            campaign.bolna_batch_status = "stopped"
+        except Exception as e:
+            logger.warning(f"Failed to stop Bolna batch {campaign.bolna_batch_id}: {e}")
 
     campaign.status = "paused"
     await db.flush()
@@ -258,11 +338,21 @@ async def get_campaign_stats(
     total = sum(status_breakdown.values())
     completed = status_breakdown.get("completed", 0)
 
+    # Call outcome breakdown (only for calls linked to this campaign)
+    outcome_result = await db.execute(
+        select(Call.outcome, func.count()).where(
+            Call.campaign_id == campaign_id,
+            Call.outcome.isnot(None),
+        ).group_by(Call.outcome)
+    )
+    outcome_breakdown = {row[0]: row[1] for row in outcome_result.all()}
+
     return ApiResponse(data={
         "campaign_id": str(campaign.id),
         "status": campaign.status,
         "total_contacts": total,
         "contact_status_breakdown": status_breakdown,
+        "outcome_breakdown": outcome_breakdown,
         "completed_calls": campaign.completed_calls or 0,
         "failed_calls": campaign.failed_calls or 0,
         "success_rate": round(completed / total * 100, 1) if total > 0 else 0,
@@ -275,6 +365,7 @@ async def list_campaign_contacts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     status: str | None = None,
+    outcome: str | None = None,
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -290,6 +381,9 @@ async def list_campaign_contacts(
     if status:
         query = query.where(CampaignContact.status == status)
         count_query = count_query.where(CampaignContact.status == status)
+    if outcome:
+        query = query.join(Call, CampaignContact.call_id == Call.id).where(Call.outcome == outcome)
+        count_query = count_query.join(Call, CampaignContact.call_id == Call.id).where(Call.outcome == outcome)
 
     total = (await db.execute(count_query)).scalar() or 0
     query = query.order_by(CampaignContact.created_at.desc()).offset((page - 1) * page_size).limit(page_size)

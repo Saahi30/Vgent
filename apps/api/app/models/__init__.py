@@ -8,6 +8,8 @@ from app.models.campaign import Campaign, CampaignContact
 from app.models.call import Call, CallTurn, CallEvent
 from app.models.usage import UsageRecord
 from app.models.webhook import WebhookDelivery
+from app.models.scheduled_callback import ScheduledCallback
+from app.models.spending_ledger import SpendingLedger
 
 __all__ = [
     "Tenant",
@@ -25,4 +27,6 @@ __all__ = [
     "CallEvent",
     "UsageRecord",
     "WebhookDelivery",
+    "ScheduledCallback",
+    "SpendingLedger",
 ]

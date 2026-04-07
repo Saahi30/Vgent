@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, cast, Date, case
 from uuid import UUID
+from datetime import datetime, timezone, timedelta
 import math
+import csv
+import io
 
 from app.core.database import get_db
 from app.core.auth import get_current_user, CurrentUser
@@ -22,6 +26,7 @@ async def list_calls(
     status: str | None = None,
     agent_id: UUID | None = None,
     campaign_id: UUID | None = None,
+    outcome: str | None = None,
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -37,6 +42,9 @@ async def list_calls(
     if campaign_id:
         query = query.where(Call.campaign_id == campaign_id)
         count_query = count_query.where(Call.campaign_id == campaign_id)
+    if outcome:
+        query = query.where(Call.outcome == outcome)
+        count_query = count_query.where(Call.outcome == outcome)
 
     total = (await db.execute(count_query)).scalar() or 0
     query = query.order_by(Call.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
@@ -51,6 +59,70 @@ async def list_calls(
         page_size=page_size,
         total_pages=math.ceil(total / page_size) if total > 0 else 0,
     )
+
+
+@router.get("/analytics", response_model=ApiResponse)
+async def get_call_analytics(
+    days: int = Query(30, ge=1, le=90),
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregate analytics: calls/day, avg duration, success rate, cost trends."""
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    tenant_filter = (Call.tenant_id == user.tenant_id) & (Call.created_at >= since)
+
+    # Daily breakdown
+    day_col = cast(Call.created_at, Date).label("day")
+    daily_q = (
+        select(
+            day_col,
+            func.count().label("total"),
+            func.count(case((Call.status == "completed", 1))).label("completed"),
+            func.count(case((Call.status == "failed", 1))).label("failed"),
+            func.avg(Call.duration_seconds).label("avg_duration"),
+            func.sum(Call.cost_usd).label("total_cost"),
+        )
+        .where(tenant_filter)
+        .group_by(day_col)
+        .order_by(day_col)
+    )
+    rows = (await db.execute(daily_q)).all()
+
+    daily = []
+    for r in rows:
+        daily.append({
+            "date": r.day.isoformat(),
+            "total": r.total,
+            "completed": r.completed,
+            "failed": r.failed,
+            "avg_duration": round(float(r.avg_duration or 0), 1),
+            "success_rate": round(r.completed / r.total * 100, 1) if r.total else 0,
+            "cost": round(float(r.total_cost or 0), 4),
+        })
+
+    # Totals for the period
+    totals_q = (
+        select(
+            func.count().label("total_calls"),
+            func.count(case((Call.status == "completed", 1))).label("completed"),
+            func.avg(Call.duration_seconds).label("avg_duration"),
+            func.sum(Call.cost_usd).label("total_cost"),
+        )
+        .where(tenant_filter)
+    )
+    t = (await db.execute(totals_q)).one()
+
+    return ApiResponse(data={
+        "daily": daily,
+        "totals": {
+            "total_calls": t.total_calls,
+            "completed": t.completed,
+            "avg_duration": round(float(t.avg_duration or 0), 1),
+            "success_rate": round(t.completed / t.total_calls * 100, 1) if t.total_calls else 0,
+            "total_cost": round(float(t.total_cost or 0), 4),
+        },
+        "days": days,
+    })
 
 
 @router.get("/active", response_model=ApiResponse)
@@ -220,9 +292,40 @@ async def hangup_call(
             call.duration_seconds = int((call.ended_at - call.started_at).total_seconds())
         await db.flush()
 
+        # Fire post-call analysis
+        from app.tasks.call_analysis_tasks import analyze_call_task
+        analyze_call_task.delay(call_id=str(call_id))
+
         return ApiResponse(data={"hung_up": hung_up, "call_id": str(call_id)})
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to hang up: {str(e)}")
+
+
+@router.post("/{call_id}/analyze", response_model=ApiResponse[CallResponse])
+async def analyze_call_endpoint(
+    call_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Manually trigger post-call summary & sentiment analysis."""
+    from app.services.call_analyzer import analyze_call
+
+    result = await db.execute(
+        select(Call).where(Call.id == call_id, Call.tenant_id == user.tenant_id)
+    )
+    call = result.scalar_one_or_none()
+    if not call:
+        raise HTTPException(status_code=404, detail="Call not found")
+
+    analysis = await analyze_call(db, str(call_id))
+    if not analysis:
+        raise HTTPException(status_code=422, detail="Analysis failed — no transcript or no LLM provider available")
+
+    await db.commit()
+
+    # Re-fetch to get updated fields
+    await db.refresh(call)
+    return ApiResponse(data=CallResponse.model_validate(call))
 
 
 @router.post("/test-call", response_model=ApiResponse)
@@ -286,3 +389,51 @@ async def test_call_webrtc(
         "livekit_url": settings.livekit_url,
         "token": browser_token,
     })
+
+
+@router.get("/export/csv")
+async def export_calls_csv(
+    status: str | None = None,
+    agent_id: UUID | None = None,
+    campaign_id: UUID | None = None,
+    outcome: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export call results as a CSV file."""
+    query = select(Call).where(Call.tenant_id == user.tenant_id)
+    if status:
+        query = query.where(Call.status == status)
+    if agent_id:
+        query = query.where(Call.agent_id == agent_id)
+    if campaign_id:
+        query = query.where(Call.campaign_id == campaign_id)
+    if outcome:
+        query = query.where(Call.outcome == outcome)
+
+    query = query.order_by(Call.created_at.desc()).limit(10000)
+    result = await db.execute(query)
+    calls = result.scalars().all()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "id", "to_number", "from_number", "status", "outcome",
+        "duration_seconds", "cost_usd", "sentiment_label", "sentiment_score",
+        "summary", "telephony_provider", "started_at", "ended_at", "created_at",
+    ])
+    for c in calls:
+        writer.writerow([
+            str(c.id), c.to_number, c.from_number, c.status, c.outcome or "",
+            c.duration_seconds or 0, round(c.cost_usd, 4), c.sentiment_label or "",
+            c.sentiment_score or "", c.summary or "",
+            c.telephony_provider or "", c.started_at or "", c.ended_at or "",
+            c.created_at,
+        ])
+
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=calls_export.csv"},
+    )

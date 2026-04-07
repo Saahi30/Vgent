@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+import jwt as pyjwt
+from jwt import PyJWKClient, PyJWKClientError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.config import get_settings
@@ -14,6 +15,17 @@ settings = get_settings()
 
 DEFAULT_USER_ID = "default"
 
+# JWKS client — caches keys automatically
+_jwks_client: PyJWKClient | None = None
+
+
+def _get_jwks_client() -> PyJWKClient:
+    global _jwks_client
+    if _jwks_client is None:
+        jwks_url = f"{settings.supabase_url}/auth/v1/.well-known/jwks.json"
+        _jwks_client = PyJWKClient(jwks_url, cache_keys=True)
+    return _jwks_client
+
 
 @dataclass
 class CurrentUser:
@@ -24,27 +36,43 @@ class CurrentUser:
 
 
 async def verify_jwt(token: str) -> dict:
-    """Verify a Supabase JWT token and return claims."""
-    jwt_secret = settings.supabase_jwt_secret
-    if not jwt_secret:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="SUPABASE_JWT_SECRET not configured",
-        )
+    """Verify a Supabase JWT token using JWKS (ES256) or fallback to HS256."""
+    # Try JWKS (ES256) first — modern Supabase projects
+    if settings.supabase_url:
+        try:
+            client = _get_jwks_client()
+            signing_key = client.get_signing_key_from_jwt(token)
+            payload = pyjwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["ES256"],
+                audience="authenticated",
+            )
+            return payload
+        except (PyJWKClientError, pyjwt.InvalidTokenError):
+            pass  # fall through to HS256
 
-    try:
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        return payload
-    except JWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired token: {str(e)}",
-        )
+    # Fallback: HS256 with JWT secret (legacy Supabase projects)
+    jwt_secret = settings.supabase_jwt_secret
+    if jwt_secret:
+        try:
+            payload = pyjwt.decode(
+                token,
+                jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+            return payload
+        except pyjwt.InvalidTokenError as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid or expired token: {str(e)}",
+            )
+
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="No JWT verification method configured",
+    )
 
 
 async def get_current_user(
@@ -63,7 +91,7 @@ async def get_current_user(
                 role=user.role,
                 email=None,
             )
-        return CurrentUser(id=DEFAULT_USER_ID, tenant_id=None, role="owner", email=None)
+        return CurrentUser(id=DEFAULT_USER_ID, tenant_id=None, role="superadmin", email=None)
 
     payload = await verify_jwt(credentials.credentials)
 

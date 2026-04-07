@@ -77,4 +77,9 @@ async def twilio_status_webhook(request: Request):
                 setattr(call, key, value)
             await db.commit()
 
+            # Fire post-call analysis when call completes
+            if mapped_status == "completed":
+                from app.tasks.call_analysis_tasks import analyze_call_task
+                analyze_call_task.delay(call_id=str(call.id))
+
     return Response(status_code=200)

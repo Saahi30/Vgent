@@ -28,6 +28,7 @@ class CallResponse(BaseModel):
     status: str
     telephony_provider: str | None
     telephony_call_id: str | None
+    bolna_execution_id: str | None = None
     from_number: str | None
     to_number: str | None
     started_at: datetime | None
@@ -42,6 +43,10 @@ class CallResponse(BaseModel):
     cost_usd: float
     end_reason: str | None
     error_message: str | None
+    summary: str | None = None
+    sentiment_score: float | None = None
+    sentiment_label: str | None = None
+    outcome: str | None = None
     metadata: dict = Field(default_factory=dict, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime

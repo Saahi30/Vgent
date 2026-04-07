@@ -31,7 +31,7 @@ export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params.id as string;
-  const token = useAuthStore((s) => s.token);
+  const token = typeof window !== "undefined" ? localStorage.getItem("vgent_token") : null;
 
   const [campaign, setCampaign] = useState<any>(null);
   const [contacts, setContacts] = useState<any[]>([]);

@@ -59,6 +59,10 @@ async def vobiz_event_webhook(request: Request):
             if call.started_at:
                 call.duration_seconds = int((call.ended_at - call.started_at).total_seconds())
 
+            # Fire post-call analysis (summary + sentiment)
+            from app.tasks.call_analysis_tasks import analyze_call_task
+            analyze_call_task.delay(call_id=str(call.id))
+
         elif event_type == "call.failed":
             call.status = "failed"
             call.ended_at = datetime.now(timezone.utc)

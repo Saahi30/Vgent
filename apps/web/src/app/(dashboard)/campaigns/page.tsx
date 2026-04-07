@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Megaphone, Play, Pause } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { PageTransition, FadeIn, motion } from "@/components/motion";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -61,46 +62,57 @@ export default function CampaignsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Campaigns</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage outbound calling campaigns</p>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Campaigns</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage outbound calling campaigns</p>
+          </div>
+          <Link href="/campaigns/new">
+            <Button><Plus className="h-4 w-4 mr-2" /> New Campaign</Button>
+          </Link>
         </div>
-        <Link href="/campaigns/new">
-          <Button><Plus className="h-4 w-4 mr-2" /> New Campaign</Button>
-        </Link>
-      </div>
+      </FadeIn>
 
       {campaigns.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Megaphone className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No campaigns yet</p>
-            <p className="text-muted-foreground text-sm mb-4">Create a campaign to start making outbound calls</p>
-            <Link href="/campaigns/new">
-              <Button><Plus className="h-4 w-4 mr-2" /> New Campaign</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <FadeIn delay={0.15}>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Megaphone className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium">No campaigns yet</p>
+              <p className="text-muted-foreground text-sm mb-4">Create a campaign to start making outbound calls</p>
+              <Link href="/campaigns/new">
+                <Button><Plus className="h-4 w-4 mr-2" /> New Campaign</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </FadeIn>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left p-4 font-medium text-muted-foreground">Name</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Agent</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Progress</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Scheduled</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaigns.map((campaign: any) => (
-                    <tr key={campaign.id} className="border-b border-border hover:bg-accent transition-colors">
+        <FadeIn delay={0.1}>
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left p-4 font-medium text-muted-foreground">Name</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Agent</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Progress</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Scheduled</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaigns.map((campaign: any, i: number) => (
+                      <motion.tr
+                        key={campaign.id}
+                        className="border-b border-border hover:bg-accent transition-colors"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.25, delay: 0.15 + i * 0.04 }}
+                      >
                       <td className="p-4">
                         <Link href={`/campaigns/${campaign.id}`} className="font-medium hover:underline">
                           {campaign.name}
@@ -138,14 +150,15 @@ export default function CampaignsPage() {
                           )}
                         </div>
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
       )}
-    </div>
+    </PageTransition>
   );
 }

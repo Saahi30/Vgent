@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from "@/store/auth";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { api } from "@/lib/api";
+import { PageTransition, FadeIn, StaggerContainer, StaggerItem, motion, AnimatePresence } from "@/components/motion";
 
 interface ActiveCall {
   call_id: string;
@@ -55,7 +56,7 @@ function statusBadge(status: string) {
 }
 
 export default function LiveMonitorPage() {
-  const { token } = useAuthStore();
+  const token = typeof window !== "undefined" ? localStorage.getItem("vgent_token") : null;
   const [activeCalls, setActiveCalls] = useState<Map<string, ActiveCall>>(new Map());
   const [callsToday, setCallsToday] = useState(0);
   const [, setTick] = useState(0); // force re-render for duration timer
@@ -147,14 +148,15 @@ export default function LiveMonitorPage() {
   const calls = Array.from(activeCalls.values());
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Live Monitor</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Real-time view of active calls
-          </p>
-        </div>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Live Monitor</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Real-time view of active calls
+            </p>
+          </div>
         <div className="flex items-center gap-2">
           <div
             className={`h-2 w-2 rounded-full ${
@@ -166,45 +168,52 @@ export default function LiveMonitorPage() {
           </span>
         </div>
       </div>
+      </FadeIn>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Phone className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{calls.length}</p>
-              <p className="text-xs text-muted-foreground">Active Calls</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{callsToday}</p>
-              <p className="text-xs text-muted-foreground">Calls This Session</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Radio className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">
-                {calls.filter((c) => c.status === "in_progress").length}
-              </p>
-              <p className="text-xs text-muted-foreground">In Conversation</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StaggerItem>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Phone className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{calls.length}</p>
+                <p className="text-xs text-muted-foreground">Active Calls</p>
+              </div>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{callsToday}</p>
+                <p className="text-xs text-muted-foreground">Calls This Session</p>
+              </div>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Radio className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {calls.filter((c) => c.status === "in_progress").length}
+                </p>
+                <p className="text-xs text-muted-foreground">In Conversation</p>
+              </div>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+      </StaggerContainer>
 
       {/* Active Calls Grid */}
       <Card>
@@ -227,8 +236,16 @@ export default function LiveMonitorPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {calls.map((call) => (
-                <Card key={call.call_id} className="border-l-4 border-l-success">
+              <AnimatePresence>
+              {calls.map((call, i) => (
+                <motion.div
+                  key={call.call_id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
+                >
+                <Card className="border-l-4 border-l-success">
                   <CardContent className="p-4 space-y-3">
                     {/* Header */}
                     <div className="flex items-center justify-between">
@@ -286,11 +303,13 @@ export default function LiveMonitorPage() {
                     )}
                   </CardContent>
                 </Card>
+                </motion.div>
               ))}
+              </AnimatePresence>
             </div>
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageTransition>
   );
 }

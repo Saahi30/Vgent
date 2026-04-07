@@ -11,6 +11,7 @@ from app.models.call import Call
 from app.models.usage import UsageRecord
 from app.schemas.tenant import TenantResponse, TenantUpdate
 from app.schemas.common import ApiResponse
+from app.services.spending_limiter import check_spending_limit
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
@@ -110,6 +111,12 @@ async def get_current_tenant_usage(
     total_cost_usd = round(usage_record.total_cost_usd, 4) if usage_record else 0.0
     cost_per_minute = round(total_cost_usd / minutes_used, 4) if minutes_used > 0 else 0.0
 
+    # Spending limit status
+    spending = await check_spending_limit(db, user.tenant_id)
+
+    minutes_limit = tenant.allocated_minutes if tenant.allocated_minutes > 0 else tenant.monthly_call_minutes_limit
+    dollars_limit = tenant.allocated_dollars if tenant.allocated_dollars > 0 else tenant.monthly_spend_limit_usd
+
     return ApiResponse(data={
         "plan": tenant.plan,
         "agents_count": agents_count,
@@ -120,4 +127,15 @@ async def get_current_tenant_usage(
         "max_concurrent_calls": tenant.max_concurrent_calls,
         "total_cost_usd": total_cost_usd,
         "cost_per_minute": cost_per_minute,
+        # Spending limits
+        "allocated_minutes": tenant.allocated_minutes,
+        "allocated_dollars": tenant.allocated_dollars,
+        "used_minutes": round(tenant.used_minutes, 2),
+        "used_dollars": round(tenant.used_dollars, 4),
+        "minutes_limit": minutes_limit,
+        "dollars_limit": dollars_limit,
+        "remaining_minutes": round(max(0, minutes_limit - tenant.used_minutes), 2) if minutes_limit > 0 else None,
+        "remaining_dollars": round(max(0, dollars_limit - tenant.used_dollars), 4) if dollars_limit > 0 else None,
+        "spending_warning": spending.warning,
+        "can_make_calls": spending.can_proceed,
     })
